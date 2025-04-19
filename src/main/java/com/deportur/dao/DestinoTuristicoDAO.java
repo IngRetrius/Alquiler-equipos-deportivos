@@ -79,28 +79,30 @@ public class DestinoTuristicoDAO {
     // Método para buscar un destino turístico por ID
     public DestinoTuristico buscarPorId(int idDestino) {
         String sql = "SELECT * FROM destino_turistico WHERE id_destino = ?";
+        DestinoTuristico destino = null;
         
-        try (Connection conn = ConexionDB.getConexion();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try {
+            Connection conn = ConexionDB.getConexion();
+            PreparedStatement stmt = conn.prepareStatement(sql);
             
             stmt.setInt(1, idDestino);
             
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    DestinoTuristico destino = new DestinoTuristico();
-                    destino.setIdDestino(rs.getInt("id_destino"));
-                    destino.setNombre(rs.getString("nombre"));
-                    destino.setUbicacion(rs.getString("ubicacion"));
-                    destino.setDescripcion(rs.getString("descripcion"));
-                    return destino;
-                }
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                destino = new DestinoTuristico();
+                destino.setIdDestino(rs.getInt("id_destino"));
+                destino.setNombre(rs.getString("nombre"));
+                destino.setUbicacion(rs.getString("ubicacion"));
+                destino.setDescripcion(rs.getString("descripcion"));
             }
             
+            rs.close();
+            stmt.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
         
-        return null;
+        return destino;
     }
     
     // Método para listar todos los destinos turísticos

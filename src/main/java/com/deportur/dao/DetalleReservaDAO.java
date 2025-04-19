@@ -82,30 +82,35 @@ public class DetalleReservaDAO {
         List<DetalleReserva> detalles = new ArrayList<>();
         String sql = "SELECT * FROM detalle_reserva WHERE id_reserva = ?";
         
-        try (Connection conn = ConexionDB.getConexion();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try {
+            Connection conn = ConexionDB.getConexion();
+            PreparedStatement stmt = conn.prepareStatement(sql);
             
             stmt.setInt(1, idReserva);
             
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    DetalleReserva detalle = new DetalleReserva();
-                    detalle.setIdDetalle(rs.getInt("id_detalle"));
-                    
-                    // Crear objeto reserva con solo el ID
-                    Reserva reserva = new Reserva();
-                    reserva.setIdReserva(rs.getInt("id_reserva"));
-                    detalle.setReserva(reserva);
-                    
-                    // Cargar el equipo
-                    EquipoDeportivo equipo = equipoDAO.buscarPorId(rs.getInt("id_equipo"));
-                    detalle.setEquipo(equipo);
-                    
-                    detalle.setPrecioUnitario(rs.getDouble("precio_unitario"));
-                    detalles.add(detalle);
-                }
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                DetalleReserva detalle = new DetalleReserva();
+                detalle.setIdDetalle(rs.getInt("id_detalle"));
+                
+                // Crear objeto reserva con solo el ID
+                Reserva reserva = new Reserva();
+                reserva.setIdReserva(rs.getInt("id_reserva"));
+                detalle.setReserva(reserva);
+                
+                // Guardar ID del equipo para consulta posterior
+                int idEquipo = rs.getInt("id_equipo");
+                detalle.setPrecioUnitario(rs.getDouble("precio_unitario"));
+                
+                // Cargar el equipo
+                EquipoDeportivo equipo = equipoDAO.buscarPorId(idEquipo);
+                detalle.setEquipo(equipo);
+                
+                detalles.add(detalle);
             }
             
+            rs.close();
+            stmt.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }

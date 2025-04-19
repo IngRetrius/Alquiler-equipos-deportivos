@@ -77,27 +77,29 @@ public class TipoEquipoDAO {
     // Método para buscar un tipo de equipo por ID
     public TipoEquipo buscarPorId(int idTipo) {
         String sql = "SELECT * FROM tipo_equipo WHERE id_tipo = ?";
+        TipoEquipo tipo = null;
         
-        try (Connection conn = ConexionDB.getConexion();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try {
+            Connection conn = ConexionDB.getConexion();
+            PreparedStatement stmt = conn.prepareStatement(sql);
             
             stmt.setInt(1, idTipo);
             
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    TipoEquipo tipo = new TipoEquipo();
-                    tipo.setIdTipo(rs.getInt("id_tipo"));
-                    tipo.setNombre(rs.getString("nombre"));
-                    tipo.setDescripcion(rs.getString("descripcion"));
-                    return tipo;
-                }
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                tipo = new TipoEquipo();
+                tipo.setIdTipo(rs.getInt("id_tipo"));
+                tipo.setNombre(rs.getString("nombre"));
+                tipo.setDescripcion(rs.getString("descripcion"));
             }
             
+            rs.close();
+            stmt.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
         
-        return null;
+        return tipo;
     }
     
     // Método para listar todos los tipos de equipo

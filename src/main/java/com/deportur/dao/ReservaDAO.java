@@ -154,20 +154,41 @@ public class ReservaDAO {
         List<Reserva> reservas = new ArrayList<>();
         String sql = "SELECT * FROM reserva ORDER BY fecha_creacion DESC";
         
-        try (Connection conn = ConexionDB.getConexion();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        try {
+            Connection conn = ConexionDB.getConexion();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
             
             while (rs.next()) {
-                Reserva reserva = crearReservaDesdeResultSet(rs);
+                Reserva reserva = new Reserva();
+                reserva.setIdReserva(rs.getInt("id_reserva"));
+                
+                // Guardar IDs para consultas posteriores
+                int idCliente = rs.getInt("id_cliente");
+                int idDestino = rs.getInt("id_destino");
+                int idReserva = rs.getInt("id_reserva");
+                
+                reserva.setFechaCreacion(rs.getTimestamp("fecha_creacion"));
+                reserva.setFechaInicio(rs.getDate("fecha_inicio"));
+                reserva.setFechaFin(rs.getDate("fecha_fin"));
+                reserva.setEstado(rs.getString("estado"));
+                
+                // Obtener objetos relacionados
+                Cliente cliente = clienteDAO.buscarPorId(idCliente);
+                reserva.setCliente(cliente);
+                
+                DestinoTuristico destino = destinoDAO.buscarPorId(idDestino);
+                reserva.setDestino(destino);
                 
                 // Cargar los detalles de la reserva
-                List<DetalleReserva> detalles = detalleReservaDAO.buscarPorReserva(reserva.getIdReserva());
+                List<DetalleReserva> detalles = detalleReservaDAO.buscarPorReserva(idReserva);
                 reserva.setDetalles(detalles);
                 
                 reservas.add(reserva);
             }
             
+            rs.close();
+            stmt.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }

@@ -89,23 +89,34 @@ public class ClienteDAO {
     // Método para buscar un cliente por ID
     public Cliente buscarPorId(int idCliente) {
         String sql = "SELECT * FROM cliente WHERE id_cliente = ?";
+        Cliente cliente = null;
         
-        try (Connection conn = ConexionDB.getConexion();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try {
+            Connection conn = ConexionDB.getConexion();
+            PreparedStatement stmt = conn.prepareStatement(sql);
             
             stmt.setInt(1, idCliente);
             
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return crearClienteDesdeResultSet(rs);
-                }
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                cliente = new Cliente();
+                cliente.setIdCliente(rs.getInt("id_cliente"));
+                cliente.setNombre(rs.getString("nombre"));
+                cliente.setApellido(rs.getString("apellido"));
+                cliente.setDocumento(rs.getString("documento"));
+                cliente.setTipoDocumento(rs.getString("tipo_documento"));
+                cliente.setTelefono(rs.getString("telefono"));
+                cliente.setEmail(rs.getString("email"));
+                cliente.setDireccion(rs.getString("direccion"));
             }
             
+            rs.close();
+            stmt.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
         
-        return null;
+        return cliente;
     }
     
     // Método para buscar un cliente por documento

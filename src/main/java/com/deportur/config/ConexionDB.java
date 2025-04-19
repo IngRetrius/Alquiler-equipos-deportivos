@@ -8,10 +8,12 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class ConexionDB {
-    private static Connection conexion = null;
     private static String url;
     private static String usuario;
     private static String password;
+    
+    // Usar ThreadLocal para mantener una conexión por hilo
+    private static ThreadLocal<Connection> threadConnection = new ThreadLocal<>();
     
     static {
         try {
@@ -31,20 +33,52 @@ public class ConexionDB {
     
     // Método para obtener la conexión
     public static Connection getConexion() throws SQLException {
-        if (conexion == null || conexion.isClosed()) {
-            conexion = DriverManager.getConnection(url, usuario, password);
+        Connection conn = threadConnection.get();
+        
+        if (conn == null || conn.isClosed()) {
+            conn = DriverManager.getConnection(url, usuario, password);
+            threadConnection.set(conn);
         }
-        return conexion;
+        
+        return conn;
     }
     
     // Método para cerrar la conexión
     public static void cerrarConexion() {
-        if (conexion != null) {
+        Connection conn = threadConnection.get();
+        if (conn != null) {
             try {
-                conexion.close();
+                conn.close();
+                threadConnection.remove();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+        }
+    }
+    
+    // Método para iniciar una transacción
+    public static void iniciarTransaccion() throws SQLException {
+        Connection conn = getConexion();
+        if (conn != null) {
+            conn.setAutoCommit(false);
+        }
+    }
+    
+    // Método para confirmar una transacción
+    public static void confirmarTransaccion() throws SQLException {
+        Connection conn = threadConnection.get();
+        if (conn != null) {
+            conn.commit();
+            conn.setAutoCommit(true);
+        }
+    }
+    
+    // Método para revertir una transacción
+    public static void revertirTransaccion() throws SQLException {
+        Connection conn = threadConnection.get();
+        if (conn != null) {
+            conn.rollback();
+            conn.setAutoCommit(true);
         }
     }
 }

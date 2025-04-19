@@ -98,23 +98,45 @@ public class EquipoDeportivoDAO {
     // Método para buscar un equipo deportivo por ID
     public EquipoDeportivo buscarPorId(int idEquipo) {
         String sql = "SELECT * FROM equipo_deportivo WHERE id_equipo = ?";
+        EquipoDeportivo equipo = null;
         
-        try (Connection conn = ConexionDB.getConexion();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try {
+            Connection conn = ConexionDB.getConexion();
+            PreparedStatement stmt = conn.prepareStatement(sql);
             
             stmt.setInt(1, idEquipo);
             
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return crearEquipoDesdeResultSet(rs);
-                }
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                equipo = new EquipoDeportivo();
+                equipo.setIdEquipo(rs.getInt("id_equipo"));
+                equipo.setNombre(rs.getString("nombre"));
+                
+                // Guardar IDs para consultas posteriores
+                int idTipo = rs.getInt("id_tipo");
+                int idDestino = rs.getInt("id_destino");
+                
+                equipo.setMarca(rs.getString("marca"));
+                equipo.setEstado(rs.getString("estado"));
+                equipo.setPrecioAlquiler(rs.getDouble("precio_alquiler"));
+                equipo.setFechaAdquisicion(rs.getDate("fecha_adquisicion"));
+                equipo.setDisponible(rs.getBoolean("disponible"));
+                
+                // Obtener objetos relacionados
+                TipoEquipo tipo = tipoEquipoDAO.buscarPorId(idTipo);
+                equipo.setTipo(tipo);
+                
+                DestinoTuristico destino = destinoDAO.buscarPorId(idDestino);
+                equipo.setDestino(destino);
             }
             
+            rs.close();
+            stmt.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
         
-        return null;
+        return equipo;
     }
     
     // Método para listar todos los equipos deportivos
@@ -122,14 +144,38 @@ public class EquipoDeportivoDAO {
         List<EquipoDeportivo> equipos = new ArrayList<>();
         String sql = "SELECT * FROM equipo_deportivo ORDER BY nombre";
         
-        try (Connection conn = ConexionDB.getConexion();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        try {
+            Connection conn = ConexionDB.getConexion();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
             
             while (rs.next()) {
-                equipos.add(crearEquipoDesdeResultSet(rs));
+                EquipoDeportivo equipo = new EquipoDeportivo();
+                equipo.setIdEquipo(rs.getInt("id_equipo"));
+                equipo.setNombre(rs.getString("nombre"));
+                
+                // Guardar IDs para consultas posteriores
+                int idTipo = rs.getInt("id_tipo");
+                int idDestino = rs.getInt("id_destino");
+                
+                equipo.setMarca(rs.getString("marca"));
+                equipo.setEstado(rs.getString("estado"));
+                equipo.setPrecioAlquiler(rs.getDouble("precio_alquiler"));
+                equipo.setFechaAdquisicion(rs.getDate("fecha_adquisicion"));
+                equipo.setDisponible(rs.getBoolean("disponible"));
+                
+                // Obtener objetos relacionados
+                TipoEquipo tipo = tipoEquipoDAO.buscarPorId(idTipo);
+                equipo.setTipo(tipo);
+                
+                DestinoTuristico destino = destinoDAO.buscarPorId(idDestino);
+                equipo.setDestino(destino);
+                
+                equipos.add(equipo);
             }
             
+            rs.close();
+            stmt.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
