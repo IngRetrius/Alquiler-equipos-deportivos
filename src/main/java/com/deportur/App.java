@@ -1,6 +1,6 @@
 package com.deportur;
 
-import com.deportur.vista.MainFrame;
+import com.deportur.vista.LoginFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import java.util.logging.Level;
@@ -18,8 +18,8 @@ public class App {
         
         // Iniciar la aplicación en el EDT (Event Dispatch Thread)
         SwingUtilities.invokeLater(() -> {
-            MainFrame mainFrame = new MainFrame();
-            mainFrame.setVisible(true);
+            LoginFrame loginFrame = new LoginFrame();
+            loginFrame.setVisible(true);
         });
     }
 }
