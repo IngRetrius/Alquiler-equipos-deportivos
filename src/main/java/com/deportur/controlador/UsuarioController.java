@@ -48,6 +48,42 @@ public class UsuarioController {
         return usuarioActual != null && usuarioActual.esAdministrador();
     }
     
+    // Método para verificar si el usuario actual es trabajador
+    public boolean esTrabajador() {
+        return usuarioActual != null && "trabajador".equals(usuarioActual.getRol());
+    }
+    
+    // Métodos para control de permisos específicos
+    
+    // Permisos para Inventario
+    public boolean puedeEditarInventario() {
+        return esAdministrador();
+    }
+    
+    // Permisos para Reservas - Todos pueden acceder
+    public boolean puedeGestionarReservas() {
+        return estaAutenticado(); // Tanto admin como trabajador
+    }
+    
+    // Permisos para Clientes - No puede eliminar si es trabajador
+    public boolean puedeEliminarClientes() {
+        return esAdministrador();
+    }
+    
+    public boolean puedeEditarClientes() {
+        return estaAutenticado(); // Tanto admin como trabajador
+    }
+    
+    // Permisos para Destinos
+    public boolean puedeEditarDestinos() {
+        return esAdministrador();
+    }
+    
+    // Permisos para Tipos de Equipo
+    public boolean puedeEditarTiposEquipo() {
+        return esAdministrador();
+    }
+    
     // Método para registrar un nuevo usuario
     public boolean registrarUsuario(String nombreUsuario, String contrasena, String rol,
                                    String nombre, String apellido, String email) {

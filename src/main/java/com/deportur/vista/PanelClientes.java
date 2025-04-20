@@ -1,6 +1,7 @@
 package com.deportur.vista;
 
 import com.deportur.controlador.ReservasController;
+import com.deportur.controlador.UsuarioController;
 import com.deportur.modelo.Cliente;
 
 import javax.swing.*;
@@ -64,6 +65,10 @@ public class PanelClientes extends JPanel {
         btnRefrescar = new JButton("Refrescar");
         btnRefrescar.addActionListener(e -> cargarDatos());
         
+        // Verificar permisos de edición
+        UsuarioController usuarioController = MainFrame.getUsuarioController();
+        btnEliminar.setEnabled(usuarioController.puedeEliminarClientes());
+    
         panelBotones.add(btnAgregar);
         panelBotones.add(btnModificar);
         panelBotones.add(btnEliminar);
@@ -94,7 +99,7 @@ public class PanelClientes extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
     }
     
-    private void mostrarFormularioAgregar() {
+    public void mostrarFormularioAgregar() {
         JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Agregar Cliente", true);
         dialog.setLayout(new BorderLayout());
         dialog.setSize(400, 350);

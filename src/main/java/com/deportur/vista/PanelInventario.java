@@ -1,6 +1,7 @@
 package com.deportur.vista;
 
 import com.deportur.controlador.InventarioController;
+import com.deportur.controlador.UsuarioController;
 import com.deportur.modelo.EquipoDeportivo;
 import com.deportur.modelo.TipoEquipo;
 import com.deportur.modelo.DestinoTuristico;
@@ -67,6 +68,14 @@ public class PanelInventario extends JPanel {
         
         btnRefrescar = new JButton("Refrescar");
         btnRefrescar.addActionListener(e -> cargarDatos());
+        
+        // Verificar permisos de edición
+        UsuarioController usuarioController = MainFrame.getUsuarioController();
+        boolean puedeEditar = usuarioController.puedeEditarInventario();
+        
+        btnAgregar.setEnabled(puedeEditar);
+        btnModificar.setEnabled(puedeEditar);
+        btnEliminar.setEnabled(puedeEditar);
         
         panelBotones.add(btnAgregar);
         panelBotones.add(btnModificar);

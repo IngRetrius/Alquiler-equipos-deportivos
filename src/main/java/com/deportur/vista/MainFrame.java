@@ -9,7 +9,7 @@ import java.awt.event.*;
 
 public class MainFrame extends JFrame {
     
-    private UsuarioController usuarioController;
+    private static UsuarioController usuarioController;
     private JTabbedPane tabbedPane;
     private PanelInventario panelInventario;
     private PanelReservas panelReservas;
@@ -20,9 +20,14 @@ public class MainFrame extends JFrame {
     private JLabel lblUsuarioActual;
     
     public MainFrame(UsuarioController usuarioController) {
-        this.usuarioController = usuarioController;
+        MainFrame.usuarioController = usuarioController;
         initComponents();
         configureUI();
+    }
+    
+    // Método estático para acceder al controlador desde cualquier panel
+    public static UsuarioController getUsuarioController() {
+        return usuarioController;
     }
     
     private void initComponents() {
@@ -111,6 +116,7 @@ public class MainFrame extends JFrame {
         JMenuItem addEquipMenuItem = new JMenuItem("Agregar Equipo", KeyEvent.VK_A);
         addEquipMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK));
         addEquipMenuItem.addActionListener(e -> panelInventario.mostrarFormularioAgregar());
+        addEquipMenuItem.setEnabled(usuarioController.puedeEditarInventario());
         
         inventoryMenu.add(addEquipMenuItem);
         
@@ -124,6 +130,15 @@ public class MainFrame extends JFrame {
         
         reservasMenu.add(newReservaMenuItem);
         
+        // Menú Clientes
+        JMenu clientesMenu = new JMenu("Clientes");
+        clientesMenu.setMnemonic(KeyEvent.VK_C);
+        
+        JMenuItem addClienteMenuItem = new JMenuItem("Agregar Cliente", KeyEvent.VK_A);
+        addClienteMenuItem.addActionListener(e -> panelClientes.mostrarFormularioAgregar());
+        
+        clientesMenu.add(addClienteMenuItem);
+        
         // Menú Administración (solo para administradores)
         JMenu adminMenu = new JMenu("Administración");
         adminMenu.setMnemonic(KeyEvent.VK_D);
@@ -132,6 +147,14 @@ public class MainFrame extends JFrame {
             JMenuItem usuariosMenuItem = new JMenuItem("Gestionar Usuarios", KeyEvent.VK_U);
             usuariosMenuItem.addActionListener(e -> tabbedPane.setSelectedComponent(panelUsuarios));
             adminMenu.add(usuariosMenuItem);
+            
+            JMenuItem destinosMenuItem = new JMenuItem("Gestionar Destinos", KeyEvent.VK_D);
+            destinosMenuItem.addActionListener(e -> tabbedPane.setSelectedComponent(panelDestinos));
+            adminMenu.add(destinosMenuItem);
+            
+            JMenuItem tiposMenuItem = new JMenuItem("Gestionar Tipos de Equipo", KeyEvent.VK_T);
+            tiposMenuItem.addActionListener(e -> tabbedPane.setSelectedComponent(panelTiposEquipo));
+            adminMenu.add(tiposMenuItem);
         }
         
         // Menú Ayuda
@@ -147,6 +170,7 @@ public class MainFrame extends JFrame {
         menuBar.add(fileMenu);
         menuBar.add(inventoryMenu);
         menuBar.add(reservasMenu);
+        menuBar.add(clientesMenu);
         
         // Solo añadir el menú de administración si tiene elementos
         if (adminMenu.getItemCount() > 0) {
@@ -171,7 +195,11 @@ public class MainFrame extends JFrame {
             "Sistema de Gestión para Alquiler de Equipos Deportivos\n" +
             "Versión 1.0\n\n" +
             "Desarrollado para destinos turísticos de Colombia\n" +
-            "© 2025 - Todos los derechos reservados",
+            "© 2025 - Todos los derechos reservados\n\n" +
+            "Autores:\n" +
+            "Juan Perea\n" +
+            "Kevin Beltran\n" +
+            "Carlos Rincon",
             "Acerca de", JOptionPane.INFORMATION_MESSAGE);
     }
 }
