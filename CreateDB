@@ -1,0 +1,126 @@
+-- Script de creación de base de datos para el Sistema de Alquiler de Equipos Deportivos
+-- DeporTur - Sistema de gestión para destinos turísticos de Colombia
+
+CREATE DATABASE IF NOT EXISTS deportur_db;
+USE deportur_db;
+
+-- Tabla de Tipos de Equipo
+CREATE TABLE tipo_equipo (
+    id_tipo INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL,
+    descripcion TEXT
+);
+
+-- Tabla de Destinos Turísticos
+CREATE TABLE destino_turistico (
+    id_destino INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    ubicacion VARCHAR(100) NOT NULL,
+    descripcion TEXT
+);
+
+-- Tabla de Equipos Deportivos
+CREATE TABLE equipo_deportivo (
+    id_equipo INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    id_tipo INT NOT NULL,
+    marca VARCHAR(50) NOT NULL,
+    estado ENUM('Nuevo', 'Bueno', 'Regular', 'Mantenimiento', 'Fuera de servicio') NOT NULL,
+    precio_alquiler DECIMAL(10,2) NOT NULL,
+    fecha_adquisicion DATE NOT NULL,
+    id_destino INT NOT NULL,
+    disponible BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (id_tipo) REFERENCES tipo_equipo(id_tipo),
+    FOREIGN KEY (id_destino) REFERENCES destino_turistico(id_destino)
+);
+
+-- Tabla de Clientes
+CREATE TABLE cliente (
+    id_cliente INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    documento VARCHAR(20) NOT NULL,
+    tipo_documento ENUM('CC', 'CE', 'Pasaporte') NOT NULL,
+    telefono VARCHAR(20),
+    email VARCHAR(100),
+    direccion VARCHAR(200)
+);
+
+-- Tabla de Reservas
+CREATE TABLE reserva (
+    id_reserva INT AUTO_INCREMENT PRIMARY KEY,
+    id_cliente INT NOT NULL,
+    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE NOT NULL,
+    id_destino INT NOT NULL,
+    estado ENUM('Pendiente', 'Confirmada', 'En progreso', 'Finalizada', 'Cancelada') NOT NULL DEFAULT 'Pendiente',
+    FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente),
+    FOREIGN KEY (id_destino) REFERENCES destino_turistico(id_destino)
+);
+
+-- Tabla de Detalles de Reserva (para equipos específicos)
+CREATE TABLE detalle_reserva (
+    id_detalle INT AUTO_INCREMENT PRIMARY KEY,
+    id_reserva INT NOT NULL,
+    id_equipo INT NOT NULL,
+    precio_unitario DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (id_reserva) REFERENCES reserva(id_reserva),
+    FOREIGN KEY (id_equipo) REFERENCES equipo_deportivo(id_equipo)
+);
+
+-- Tabla de Usuarios del Sistema
+CREATE TABLE usuario (
+    id_usuario INT(11) NOT NULL AUTO_INCREMENT,
+    nombre_usuario VARCHAR(50) NOT NULL UNIQUE,
+    contrasena VARCHAR(50) NOT NULL,
+    rol ENUM('administrador', 'trabajador') NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    email VARCHAR(100),
+    activo TINYINT(1) DEFAULT 1,
+    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_usuario)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Datos de muestra para pruebas
+
+-- Insertar usuario administrador por defecto
+INSERT INTO usuario (nombre_usuario, contrasena, rol, nombre, apellido, email)
+VALUES ('admin', 'Admin@123', 'administrador', 'Administrador', 'Sistema', 'admin@deportur.com');
+
+-- Insertar Tipos de Equipo
+INSERT INTO tipo_equipo (nombre, descripcion) VALUES
+('Bicicleta de montaña', 'Bicicletas para recorridos en terrenos irregulares'),
+('Kayak', 'Embarcación para actividades acuáticas'),
+('Equipo de senderismo', 'Kit completo para senderismo y caminatas ecológicas');
+
+-- Insertar Destinos Turísticos
+INSERT INTO destino_turistico (nombre, ubicacion, descripcion) VALUES
+('Parque Nacional Natural Tayrona', 'Santa Marta, Magdalena', 'Playas vírgenes y selva tropical'),
+('Guatapé', 'Antioquia', 'Pueblo colorido con la famosa Piedra del Peñol'),
+('Desierto de la Tatacoa', 'Huila', 'Paisaje árido ideal para observación astronómica');
+
+-- Insertar Equipos Deportivos
+INSERT INTO equipo_deportivo (nombre, id_tipo, marca, estado, precio_alquiler, fecha_adquisicion, id_destino) VALUES
+('Bici Trek 2023', 1, 'Trek', 'Bueno', 60000.00, '2023-05-20', 1),
+('Kayak Explorer Doble', 2, 'Explorer', 'Nuevo', 85000.00, '2024-01-10', 2),
+('Set Senderismo Pro', 3, 'The North Face', 'Mantenimiento', 30000.00, '2022-11-05', 3);
+
+-- Insertar Clientes
+INSERT INTO cliente (nombre, apellido, documento, tipo_documento, telefono, email, direccion) VALUES
+('Laura', 'Gómez', '11223344', 'CC', '3001112233', 'laura.gomez@example.com', 'Calle 10 #23-45, Bogotá'),
+('Carlos', 'Martínez', '55667788', 'CE', '3209988776', 'carlos.m@example.com', 'Cra 7 #12-34, Medellín'),
+('Andrés', 'Pérez', '99887766', 'Pasaporte', '3112233445', 'andres.perez@example.com', 'Av. 15 #10-90, Cali');
+
+-- Insertar Reservas
+INSERT INTO reserva (id_cliente, fecha_inicio, fecha_fin, id_destino, estado) VALUES
+(1, '2025-06-01', '2025-06-03', 1, 'Confirmada'),
+(2, '2025-07-10', '2025-07-12', 2, 'Pendiente'),
+(3, '2025-05-15', '2025-05-16', 3, 'Finalizada');
+
+-- Insertar Detalles de Reserva
+INSERT INTO detalle_reserva (id_reserva, id_equipo, precio_unitario) VALUES
+(1, 1, 60000.00),
+(2, 2, 85000.00),
+(3, 3, 30000.00);
