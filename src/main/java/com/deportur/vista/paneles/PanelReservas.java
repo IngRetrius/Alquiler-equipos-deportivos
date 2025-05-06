@@ -16,7 +16,6 @@ import com.deportur.vista.util.UIUtils;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
@@ -26,7 +25,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.text.ParseException;
 
 /**
  * Panel de gestión de reservas con diseño mejorado
@@ -656,6 +654,14 @@ public class PanelReservas extends JPanel {
         panelConfirmacion.add(resumenPanel, BorderLayout.CENTER);
         panelConfirmacion.add(detallesPanel, BorderLayout.SOUTH);
         
+        // Añadir componentes a panelDatos
+        JPanel contenedorDatos = new JPanel(new BorderLayout(0, 20));
+        contenedorDatos.setOpaque(false);
+        contenedorDatos.add(formPanel, BorderLayout.NORTH);
+        contenedorDatos.add(equiposPanel, BorderLayout.CENTER);
+        
+        panelDatos.add(contenedorDatos, BorderLayout.CENTER);
+        
         // Añadir paneles al tabbedPane
         tabbedPane.addTab("1. Selección", null, panelDatos, "Seleccione cliente, destino, fechas y equipos");
         tabbedPane.addTab("2. Confirmación", null, panelConfirmacion, "Confirme los detalles de la reserva");
@@ -671,20 +677,22 @@ public class PanelReservas extends JPanel {
         RoundedButton btnAtras = new RoundedButton("Atrás", Color.LIGHT_GRAY);
         btnAtras.setForeground(Color.DARK_GRAY);
         btnAtras.setVisible(false);
+        
+        RoundedButton btnConfirmar = new RoundedButton("Confirmar Reserva", UIConstants.SECONDARY_COLOR);
+        btnConfirmar.setForeground(Color.WHITE);
+        btnConfirmar.setVisible(false);
+        
+        RoundedButton btnCancelarForm = new RoundedButton("Cancelar", Color.LIGHT_GRAY);
+        btnCancelarForm.setForeground(Color.DARK_GRAY);
+        btnCancelarForm.addActionListener(e -> dialog.dispose());
+        
+        // Para btnAtras (volver a la pestaña anterior)
         btnAtras.addActionListener(e -> {
             tabbedPane.setSelectedIndex(0);
             btnSiguiente.setVisible(true);
             btnAtras.setVisible(false);
             btnConfirmar.setVisible(false);
         });
-        
-        RoundedButton btnConfirmar = new RoundedButton("Confirmar Reserva", UIConstants.SECONDARY_COLOR);
-        btnConfirmar.setForeground(Color.WHITE);
-        btnConfirmar.setVisible(false);
-        
-        RoundedButton btnCancelar = new RoundedButton("Cancelar", Color.LIGHT_GRAY);
-        btnCancelar.setForeground(Color.DARK_GRAY);
-        btnCancelar.addActionListener(e -> dialog.dispose());
         
         // Eventos
         // Para btnAgregar (mover equipos de disponibles a seleccionados)
@@ -861,7 +869,7 @@ public class PanelReservas extends JPanel {
         });
         
         buttonPanel.add(btnAtras);
-        buttonPanel.add(btnCancelar);
+        buttonPanel.add(btnCancelarForm);
         buttonPanel.add(btnSiguiente);
         buttonPanel.add(btnConfirmar);
         
@@ -1253,11 +1261,11 @@ public class PanelReservas extends JPanel {
             }
         });
         
-        RoundedButton btnCancelar = new RoundedButton("Cancelar", Color.LIGHT_GRAY);
-        btnCancelar.setForeground(Color.DARK_GRAY);
-        btnCancelar.addActionListener(e -> dialog.dispose());
+        RoundedButton btnCancelarDialog = new RoundedButton("Cancelar", Color.LIGHT_GRAY);
+        btnCancelarDialog.setForeground(Color.DARK_GRAY);
+        btnCancelarDialog.addActionListener(e -> dialog.dispose());
         
-        panelBotones.add(btnCancelar);
+        panelBotones.add(btnCancelarDialog);
         panelBotones.add(btnGuardar);
         
         dialog.add(panel, BorderLayout.CENTER);

@@ -41,7 +41,8 @@ public class SideMenu extends JPanel {
      * @return El índice de la opción agregada
      */
     public int addOption(String title, ImageIcon icon) {
-        MenuOption option = new MenuOption(title, icon, menuOptions.size());
+        int index = menuOptions.size();
+        MenuOption option = new MenuOption(title, icon, index);
         menuOptions.add(option);
         add(option);
         
@@ -49,7 +50,7 @@ public class SideMenu extends JPanel {
             selectOption(0); // Seleccionar la primera opción por defecto
         }
         
-        return menuOptions.size() - 1;
+        return index;
     }
     
     /**
@@ -106,10 +107,10 @@ public class SideMenu extends JPanel {
             setCursor(new Cursor(Cursor.HAND_CURSOR));
             
             // Crear componentes
-            iconLabel = new JLabel(icon);
+            iconLabel = new JLabel(this.icon);
             iconLabel.setForeground(textColor);
             
-            titleLabel = new JLabel(title);
+            titleLabel = new JLabel(this.title);
             titleLabel.setForeground(textColor);
             titleLabel.setFont(UIConstants.NORMAL_FONT);
             
@@ -140,7 +141,8 @@ public class SideMenu extends JPanel {
             addMouseListener(new MouseAdapter() {
                 @Override
                 public void mousePressed(MouseEvent e) {
-                    SideMenu.this.selectOption(index);
+                    // Usar el índice almacenado para seleccionar esta opción
+                    SideMenu.this.selectOption(MenuOption.this.index);
                 }
                 
                 @Override

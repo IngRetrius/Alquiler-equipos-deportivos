@@ -1,7 +1,6 @@
 package com.deportur.vista.paneles;
 
 import com.deportur.controlador.InventarioController;
-import com.deportur.controlador.UsuarioController;
 import com.deportur.modelo.DestinoTuristico;
 import com.deportur.vista.MainFrame;
 import com.deportur.vista.componentes.RoundedButton;
@@ -9,7 +8,7 @@ import com.deportur.vista.componentes.SearchBar;
 import com.deportur.vista.util.ImageCache;
 import com.deportur.vista.util.UIConstants;
 import com.deportur.vista.util.UIUtils;
-
+import java.awt.Dialog;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;

@@ -20,43 +20,43 @@ public class SearchBar extends JPanel {
     private JTextField searchField;
     private JButton searchButton;
     private JComboBox<String> filterComboBox;
-    private String placeholderText;
+    private String placeholderText = "";
     
     /**
      * Constructor simple
      * 
-     * @param placeholderText Texto de marcador de posición
+     * @param placeholder Texto de marcador de posición
      */
-    public SearchBar(String placeholderText) {
-        this(placeholderText, null, false);
+    public SearchBar(String placeholder) {
+        this(placeholder, null, false);
     }
     
     /**
      * Constructor con filtro
      * 
-     * @param placeholderText Texto de marcador de posición
+     * @param placeholder Texto de marcador de posición
      * @param filterOptions Opciones de filtro (si es null, no se muestra el combobox)
      */
-    public SearchBar(String placeholderText, String[] filterOptions) {
-        this(placeholderText, filterOptions, false);
+    public SearchBar(String placeholder, String[] filterOptions) {
+        this(placeholder, filterOptions, false);
     }
     
     /**
      * Constructor completo
      * 
-     * @param placeholderText Texto de marcador de posición
+     * @param placeholder Texto de marcador de posición
      * @param filterOptions Opciones de filtro (si es null, no se muestra el combobox)
      * @param withAutoComplete Si se habilita el autocompletado
      */
-    public SearchBar(String placeholderText, String[] filterOptions, boolean withAutoComplete) {
-        this.placeholderText = placeholderText;
+    public SearchBar(String placeholder, String[] filterOptions, boolean withAutoComplete) {
+        this.placeholderText = placeholder;
         
         setLayout(new BorderLayout(5, 0));
         setBorder(new EmptyBorder(5, 5, 5, 5));
         setOpaque(false);
         
         // Campo de búsqueda con ícono
-        searchField = new PlaceholderTextField(placeholderText);
+        searchField = new PlaceholderTextField(this.placeholderText);
         searchField.setFont(UIConstants.NORMAL_FONT);
         searchField.setPreferredSize(new Dimension(250, UIConstants.FIELD_HEIGHT));
         
@@ -94,13 +94,13 @@ public class SearchBar extends JPanel {
      */
     private class PlaceholderTextField extends JTextField {
         
-        private String placeholder;
+        private final String placeholder;
         private boolean showingPlaceholder;
         
         public PlaceholderTextField(String placeholder) {
             this.placeholder = placeholder;
             this.showingPlaceholder = true;
-            setText(placeholder);
+            setText(this.placeholder);
             setForeground(Color.GRAY);
             
             // Aplicar borde redondeado
@@ -122,7 +122,7 @@ public class SearchBar extends JPanel {
                 @Override
                 public void focusLost(FocusEvent e) {
                     if (getText().isEmpty()) {
-                        setText(placeholder);
+                        setText(PlaceholderTextField.this.placeholder);
                         setForeground(Color.GRAY);
                         showingPlaceholder = true;
                     }

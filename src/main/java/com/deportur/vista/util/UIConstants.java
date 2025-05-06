@@ -7,6 +7,7 @@ import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import java.net.URL;
 
 /**
  * Constantes y recursos visuales para unificar el aspecto de la aplicación
@@ -47,31 +48,49 @@ public class UIConstants {
     public static final int BORDER_RADIUS = 8;
     
     // Iconos (rutas a iconos desde recursos)
-    public static final String ICON_PATH = "/com/deportur/resources/icons/";
-    public static final ImageIcon APP_ICON = new ImageIcon(UIConstants.class.getResource(ICON_PATH + "app_icon.png"));
-    public static final ImageIcon LOGIN_ICON = new ImageIcon(UIConstants.class.getResource(ICON_PATH + "login.png"));
-    public static final ImageIcon USER_ICON = new ImageIcon(UIConstants.class.getResource(ICON_PATH + "user.png"));
-    public static final ImageIcon ADD_ICON = new ImageIcon(UIConstants.class.getResource(ICON_PATH + "add.png"));
-    public static final ImageIcon EDIT_ICON = new ImageIcon(UIConstants.class.getResource(ICON_PATH + "edit.png"));
-    public static final ImageIcon DELETE_ICON = new ImageIcon(UIConstants.class.getResource(ICON_PATH + "delete.png"));
-    public static final ImageIcon REFRESH_ICON = new ImageIcon(UIConstants.class.getResource(ICON_PATH + "refresh.png"));
-    public static final ImageIcon SEARCH_ICON = new ImageIcon(UIConstants.class.getResource(ICON_PATH + "search.png"));
-    public static final ImageIcon INVENTORY_ICON = new ImageIcon(UIConstants.class.getResource(ICON_PATH + "inventory.png"));
-    public static final ImageIcon RESERVATION_ICON = new ImageIcon(UIConstants.class.getResource(ICON_PATH + "reservation.png"));
-    public static final ImageIcon CLIENT_ICON = new ImageIcon(UIConstants.class.getResource(ICON_PATH + "client.png"));
-    public static final ImageIcon DESTINATION_ICON = new ImageIcon(UIConstants.class.getResource(ICON_PATH + "destination.png"));
-    public static final ImageIcon TYPE_ICON = new ImageIcon(UIConstants.class.getResource(ICON_PATH + "type.png"));
-    public static final ImageIcon SETTINGS_ICON = new ImageIcon(UIConstants.class.getResource(ICON_PATH + "settings.png"));
-    public static final ImageIcon INFO_ICON = new ImageIcon(UIConstants.class.getResource(ICON_PATH + "info.png"));
-    public static final ImageIcon LOGOUT_ICON = new ImageIcon(UIConstants.class.getResource(ICON_PATH + "logout.png"));
-    public static final ImageIcon CARD_VIEW_ICON = new ImageIcon(UIConstants.class.getResource(ICON_PATH + "card_view.png"));
-    public static final ImageIcon LIST_VIEW_ICON = new ImageIcon(UIConstants.class.getResource(ICON_PATH + "list_view.png"));
+    private static final String ICON_PATH = "/com/deportur/resources/icons/";
+    private static final String IMAGE_PATH = "/com/deportur/resources/images/";
+    
+    // Método mejorado para cargar iconos con fallback visual
+    private static ImageIcon safeLoadIcon(String path) {
+        return safeLoadIcon(path, 24, 24);
+    }
+    
+    // Método mejorado para cargar iconos con fallback visual y tamaño personalizado
+    private static ImageIcon safeLoadIcon(String path, int width, int height) {
+        URL resourceUrl = UIConstants.class.getResource(path);
+        if (resourceUrl != null) {
+            return new ImageIcon(resourceUrl);
+        } else {
+            System.out.println("Advertencia: No se pudo cargar el recurso: " + path);
+            return SVGUtil.createPlaceholderIcon(path, width, height);
+        }
+    }
+    
+    // Iconos de la aplicación
+    public static final ImageIcon APP_ICON = safeLoadIcon(ICON_PATH + "app_icon.svg");
+    public static final ImageIcon LOGIN_ICON = safeLoadIcon(ICON_PATH + "login.svg");
+    public static final ImageIcon USER_ICON = safeLoadIcon(ICON_PATH + "user.svg");
+    public static final ImageIcon ADD_ICON = safeLoadIcon(ICON_PATH + "add.svg");
+    public static final ImageIcon EDIT_ICON = safeLoadIcon(ICON_PATH + "edit.svg");
+    public static final ImageIcon DELETE_ICON = safeLoadIcon(ICON_PATH + "delete.svg");
+    public static final ImageIcon REFRESH_ICON = safeLoadIcon(ICON_PATH + "refresh.svg");
+    public static final ImageIcon SEARCH_ICON = safeLoadIcon(ICON_PATH + "search.svg");
+    public static final ImageIcon INVENTORY_ICON = safeLoadIcon(ICON_PATH + "inventory.svg");
+    public static final ImageIcon RESERVATION_ICON = safeLoadIcon(ICON_PATH + "reservation.svg");
+    public static final ImageIcon CLIENT_ICON = safeLoadIcon(ICON_PATH + "client.svg");
+    public static final ImageIcon DESTINATION_ICON = safeLoadIcon(ICON_PATH + "destination.svg");
+    public static final ImageIcon TYPE_ICON = safeLoadIcon(ICON_PATH + "type.svg");
+    public static final ImageIcon SETTINGS_ICON = safeLoadIcon(ICON_PATH + "settings.svg");
+    public static final ImageIcon INFO_ICON = safeLoadIcon(ICON_PATH + "info.svg");
+    public static final ImageIcon LOGOUT_ICON = safeLoadIcon(ICON_PATH + "logout.svg");
+    public static final ImageIcon CARD_VIEW_ICON = safeLoadIcon(ICON_PATH + "card_view.svg");
+    public static final ImageIcon LIST_VIEW_ICON = safeLoadIcon(ICON_PATH + "list_view.svg");
     
     // Imágenes
-    public static final String IMAGE_PATH = "/com/deportur/resources/images/";
-    public static final ImageIcon DEFAULT_EQUIPMENT_IMAGE = new ImageIcon(UIConstants.class.getResource(IMAGE_PATH + "default_equipment.png"));
-    public static final ImageIcon DEFAULT_PROFILE_IMAGE = new ImageIcon(UIConstants.class.getResource(IMAGE_PATH + "default_profile.png"));
-    public static final ImageIcon LOGIN_BACKGROUND = new ImageIcon(UIConstants.class.getResource(IMAGE_PATH + "login_background.jpg"));
+    public static final ImageIcon DEFAULT_EQUIPMENT_IMAGE = safeLoadIcon(IMAGE_PATH + "default_equipment.svg", 64, 64);
+    public static final ImageIcon DEFAULT_PROFILE_IMAGE = safeLoadIcon(IMAGE_PATH + "default_profile.svg", 64, 64);
+    public static final ImageIcon LOGIN_BACKGROUND = safeLoadIcon(IMAGE_PATH + "login_background.svg", 450, 600);
     
     // Texto para tooltips
     public static final String ADD_TOOLTIP = "Agregar nuevo registro";

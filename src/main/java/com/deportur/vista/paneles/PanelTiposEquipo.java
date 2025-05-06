@@ -1,7 +1,6 @@
 package com.deportur.vista.paneles;
 
 import com.deportur.controlador.InventarioController;
-import com.deportur.controlador.UsuarioController;
 import com.deportur.modelo.TipoEquipo;
 import com.deportur.vista.MainFrame;
 import com.deportur.vista.componentes.RoundedButton;

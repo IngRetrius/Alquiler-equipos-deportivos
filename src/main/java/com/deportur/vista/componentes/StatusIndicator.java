@@ -30,8 +30,8 @@ public class StatusIndicator extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         
         // Crear componentes
-        label = new JLabel(statusText);
-        label.setForeground(statusColor);
+        label = new JLabel(this.statusText);
+        label.setForeground(this.statusColor);
         
         // Agregar componentes
         add(Box.createHorizontalStrut(dotSize + dotMargin));
@@ -59,7 +59,7 @@ public class StatusIndicator extends JPanel {
      */
     public void setStatusText(String text) {
         this.statusText = text;
-        label.setText(text);
+        label.setText(this.statusText);
         
         // Actualizar tamaño preferido
         int preferredWidth = label.getPreferredSize().width + dotSize + dotMargin * 2;
@@ -77,7 +77,7 @@ public class StatusIndicator extends JPanel {
      */
     public void setStatusColor(Color color) {
         this.statusColor = color;
-        label.setForeground(color);
+        label.setForeground(this.statusColor);
         repaint();
     }
     

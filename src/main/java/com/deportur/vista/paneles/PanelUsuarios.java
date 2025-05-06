@@ -5,20 +5,17 @@ import com.deportur.modelo.Usuario;
 import com.deportur.vista.componentes.RoundedButton;
 import com.deportur.vista.componentes.SearchBar;
 import com.deportur.vista.componentes.StatusIndicator;
-import com.deportur.vista.util.ImageCache;
 import com.deportur.vista.util.UIConstants;
 import com.deportur.vista.util.UIUtils;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**

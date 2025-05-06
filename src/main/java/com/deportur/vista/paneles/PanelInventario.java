@@ -1,7 +1,6 @@
 package com.deportur.vista.paneles;
 
 import com.deportur.controlador.InventarioController;
-import com.deportur.controlador.UsuarioController;
 import com.deportur.modelo.EquipoDeportivo;
 import com.deportur.modelo.TipoEquipo;
 import com.deportur.modelo.DestinoTuristico;
@@ -13,14 +12,12 @@ import com.deportur.vista.componentes.StatusIndicator;
 import com.deportur.vista.util.ImageCache;
 import com.deportur.vista.util.UIConstants;
 import com.deportur.vista.util.UIUtils;
-
+import java.awt.Dialog;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
@@ -464,7 +461,8 @@ public class PanelInventario extends JPanel implements EquipoCard.EquipoCardList
      * Muestra el formulario para agregar un nuevo equipo
      */
     public void mostrarFormularioAgregar() {
-        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Agregar Equipo", true);
+        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Agregar Equipo", 
+                                     Dialog.ModalityType.APPLICATION_MODAL);
         dialog.setLayout(new BorderLayout());
         dialog.setSize(800, 600);
         dialog.setLocationRelativeTo(this);
@@ -633,7 +631,8 @@ public class PanelInventario extends JPanel implements EquipoCard.EquipoCardList
         }
         
         // Similar a mostrarFormularioAgregar pero con datos precargados
-        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Modificar Equipo", true);
+        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Modificar Equipo", 
+                             Dialog.ModalityType.APPLICATION_MODAL);
         dialog.setLayout(new BorderLayout());
         dialog.setSize(800, 600);
         dialog.setLocationRelativeTo(this);
@@ -831,7 +830,8 @@ public class PanelInventario extends JPanel implements EquipoCard.EquipoCardList
     private void mostrarDetallesEquipo(EquipoDeportivo equipo) {
         if (equipo == null) return;
         
-        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Detalles del Equipo", true);
+        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Detalles del Equipo", 
+                             Dialog.ModalityType.APPLICATION_MODAL);
         dialog.setLayout(new BorderLayout());
         dialog.setSize(700, 500);
         dialog.setLocationRelativeTo(this);
