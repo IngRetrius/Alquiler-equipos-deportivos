@@ -26,6 +26,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.text.ParseException;
 
 /**
  * Panel de gestión de reservas con diseño mejorado
@@ -47,8 +48,8 @@ public class PanelReservas extends JPanel {
     private DefaultTableModel tableModel;
     private JScrollPane scrollPane;
     private JComboBox<String> cmbEstadoFiltro;
-    private JDateChooser dateDesde;
-    private JDateChooser dateHasta;
+    private JFormattedTextField dateDesde;
+    private JFormattedTextField dateHasta;
     private JCheckBox chkFiltroFecha;
     
     // Estado actual
@@ -106,30 +107,24 @@ public class PanelReservas extends JPanel {
         filterPanel.add(chkFiltroFecha);
         
         filterPanel.add(new JLabel("Desde:"));
-        dateDesde = new JDateChooser();
+        // Crear un formato de fecha
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        dateDesde = new JFormattedTextField(dateFormat);
         dateDesde.setPreferredSize(new Dimension(120, UIConstants.FIELD_HEIGHT));
-        dateDesde.setDate(new Date());
+        dateDesde.setValue(new Date());
         dateDesde.setEnabled(false);
-        dateDesde.getDateEditor().addPropertyChangeListener(e -> {
-            if ("date".equals(e.getPropertyName())) {
-                aplicarFiltros();
-            }
-        });
+        dateDesde.addPropertyChangeListener("value", e -> aplicarFiltros());
         filterPanel.add(dateDesde);
         
         filterPanel.add(new JLabel("Hasta:"));
-        dateHasta = new JDateChooser();
+        dateHasta = new JFormattedTextField(dateFormat);
         dateHasta.setPreferredSize(new Dimension(120, UIConstants.FIELD_HEIGHT));
         // Establecer fecha hasta como 30 días después de la fecha actual
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DAY_OF_MONTH, 30);
-        dateHasta.setDate(calendar.getTime());
+        dateHasta.setValue(calendar.getTime());
         dateHasta.setEnabled(false);
-        dateHasta.getDateEditor().addPropertyChangeListener(e -> {
-            if ("date".equals(e.getPropertyName())) {
-                aplicarFiltros();
-            }
-        });
+        dateHasta.addPropertyChangeListener("value", e -> aplicarFiltros());
         filterPanel.add(dateHasta);
         
         // Panel de botones
@@ -330,8 +325,8 @@ public class PanelReservas extends JPanel {
         // Obtener valores de filtros
         String estadoSeleccionado = (String) cmbEstadoFiltro.getSelectedItem();
         boolean filtrarPorFechas = chkFiltroFecha.isSelected();
-        Date fechaDesde = dateDesde.getDate();
-        Date fechaHasta = dateHasta.getDate();
+        Date fechaDesde = (Date) dateDesde.getValue();
+        Date fechaHasta = (Date) dateHasta.getValue();
         
         // Aplicar filtros
         for (Reserva reserva : reservas) {
@@ -432,7 +427,8 @@ public class PanelReservas extends JPanel {
      * Muestra el formulario para crear una nueva reserva
      */
     public void mostrarFormularioCrear() {
-        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Nueva Reserva", true);
+        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Nueva Reserva", 
+                                    Dialog.ModalityType.APPLICATION_MODAL);
         dialog.setLayout(new BorderLayout());
         dialog.setSize(900, 600);
         dialog.setLocationRelativeTo(this);
@@ -491,8 +487,8 @@ public class PanelReservas extends JPanel {
         formPanel.add(new JLabel("Fecha Inicio:"), gbc);
         
         gbc.gridx = 1;
-        JDateChooser txtFechaInicio = new JDateChooser();
-        txtFechaInicio.setDate(new Date());
+        JFormattedTextField txtFechaInicio = new JFormattedTextField(new SimpleDateFormat("dd/MM/yyyy"));
+        txtFechaInicio.setValue(new Date());
         txtFechaInicio.setPreferredSize(new Dimension(0, UIConstants.FIELD_HEIGHT));
         formPanel.add(txtFechaInicio, gbc);
         
@@ -501,10 +497,10 @@ public class PanelReservas extends JPanel {
         formPanel.add(new JLabel("Fecha Fin:"), gbc);
         
         gbc.gridx = 1;
-        JDateChooser txtFechaFin = new JDateChooser();
+        JFormattedTextField txtFechaFin = new JFormattedTextField(new SimpleDateFormat("dd/MM/yyyy"));
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DAY_OF_MONTH, 7); // Una semana después
-        txtFechaFin.setDate(calendar.getTime());
+        txtFechaFin.setValue(calendar.getTime());
         txtFechaFin.setPreferredSize(new Dimension(0, UIConstants.FIELD_HEIGHT));
         formPanel.add(txtFechaFin, gbc);
         
@@ -549,25 +545,9 @@ public class PanelReservas extends JPanel {
         
         RoundedButton btnAgregar = new RoundedButton(">>", UIConstants.SECONDARY_COLOR);
         btnAgregar.setForeground(Color.WHITE);
-        btnAgregar.addActionListener(e -> {
-            List<EquipoDeportivo> seleccionados = listaDisponibles.getSelectedValuesList();
-            for (EquipoDeportivo equipo : seleccionados) {
-                modeloDisponibles.removeElement(equipo);
-                modeloSeleccionados.addElement(equipo);
-            }
-            actualizarTotalReserva(modeloSeleccionados, labelTotal);
-        });
         
         RoundedButton btnQuitar = new RoundedButton("<<", UIConstants.SECONDARY_COLOR);
         btnQuitar.setForeground(Color.WHITE);
-        btnQuitar.addActionListener(e -> {
-            List<EquipoDeportivo> seleccionados = listaSeleccionados.getSelectedValuesList();
-            for (EquipoDeportivo equipo : seleccionados) {
-                modeloSeleccionados.removeElement(equipo);
-                modeloDisponibles.addElement(equipo);
-            }
-            actualizarTotalReserva(modeloSeleccionados, labelTotal);
-        });
         
         botonesMovimientoPanel.add(btnAgregar);
         botonesMovimientoPanel.add(btnQuitar);
@@ -600,64 +580,6 @@ public class PanelReservas extends JPanel {
         equiposPanel.add(listasPanel, BorderLayout.CENTER);
         equiposPanel.add(panelCentro, BorderLayout.EAST);
         equiposPanel.add(totalPanel, BorderLayout.SOUTH);
-        
-        // Eventos para buscar equipos disponibles
-        btnBuscarEquipos.addActionListener(e -> {
-            try {
-                // Limpiar listas
-                modeloDisponibles.clear();
-                modeloSeleccionados.clear();
-                
-                // Validar entrada
-                if (cmbDestino.getSelectedItem() == null) {
-                    UIUtils.showWarningMessage(dialog, "Debe seleccionar un destino", "Advertencia");
-                    return;
-                }
-                
-                if (txtFechaInicio.getDate() == null || txtFechaFin.getDate() == null) {
-                    UIUtils.showWarningMessage(dialog, "Debe especificar las fechas de inicio y fin", "Advertencia");
-                    return;
-                }
-                
-                if (txtFechaInicio.getDate().after(txtFechaFin.getDate())) {
-                    UIUtils.showWarningMessage(dialog, "La fecha de inicio no puede ser posterior a la fecha de fin", "Advertencia");
-                    return;
-                }
-                
-                if (txtFechaInicio.getDate().before(new Date())) {
-                    UIUtils.showWarningMessage(dialog, "La fecha de inicio no puede ser anterior a la fecha actual", "Advertencia");
-                    return;
-                }
-                
-                // Buscar equipos disponibles
-                DestinoTuristico destino = (DestinoTuristico) cmbDestino.getSelectedItem();
-                Date fechaInicio = txtFechaInicio.getDate();
-                Date fechaFin = txtFechaFin.getDate();
-                
-                java.sql.Date sqlFechaInicio = new java.sql.Date(fechaInicio.getTime());
-                java.sql.Date sqlFechaFin = new java.sql.Date(fechaFin.getTime());
-                
-                List<EquipoDeportivo> equiposDisponibles = inventarioController.buscarEquiposDisponibles(
-                    destino.getIdDestino(), sqlFechaInicio, sqlFechaFin);
-                
-                if (equiposDisponibles == null || equiposDisponibles.isEmpty()) {
-                    UIUtils.showInfoMessage(dialog, "No hay equipos disponibles en ese destino para las fechas seleccionadas", "Información");
-                    return;
-                }
-                
-                // Llenar lista de disponibles
-                for (EquipoDeportivo equipo : equiposDisponibles) {
-                    modeloDisponibles.addElement(equipo);
-                }
-                
-            } catch (Exception ex) {
-                UIUtils.showErrorMessage(dialog, "Error al buscar equipos disponibles: " + ex.getMessage(), "Error");
-            }
-        });
-        
-        // Añadir todo al panel de datos
-        panelDatos.add(formPanel, BorderLayout.NORTH);
-        panelDatos.add(equiposPanel, BorderLayout.CENTER);
         
         // Panel de confirmación
         JPanel panelConfirmacion = new JPanel(new BorderLayout(20, 20));
@@ -745,6 +667,102 @@ public class PanelReservas extends JPanel {
         
         RoundedButton btnSiguiente = new RoundedButton("Siguiente", UIConstants.PRIMARY_COLOR);
         btnSiguiente.setForeground(Color.WHITE);
+        
+        RoundedButton btnAtras = new RoundedButton("Atrás", Color.LIGHT_GRAY);
+        btnAtras.setForeground(Color.DARK_GRAY);
+        btnAtras.setVisible(false);
+        btnAtras.addActionListener(e -> {
+            tabbedPane.setSelectedIndex(0);
+            btnSiguiente.setVisible(true);
+            btnAtras.setVisible(false);
+            btnConfirmar.setVisible(false);
+        });
+        
+        RoundedButton btnConfirmar = new RoundedButton("Confirmar Reserva", UIConstants.SECONDARY_COLOR);
+        btnConfirmar.setForeground(Color.WHITE);
+        btnConfirmar.setVisible(false);
+        
+        RoundedButton btnCancelar = new RoundedButton("Cancelar", Color.LIGHT_GRAY);
+        btnCancelar.setForeground(Color.DARK_GRAY);
+        btnCancelar.addActionListener(e -> dialog.dispose());
+        
+        // Eventos
+        // Para btnAgregar (mover equipos de disponibles a seleccionados)
+        btnAgregar.addActionListener(e -> {
+            List<EquipoDeportivo> seleccionados = listaDisponibles.getSelectedValuesList();
+            for (EquipoDeportivo equipo : seleccionados) {
+                modeloDisponibles.removeElement(equipo);
+                modeloSeleccionados.addElement(equipo);
+            }
+            actualizarTotalReserva(modeloSeleccionados, labelTotal);
+        });
+        
+        // Para btnQuitar (mover equipos de seleccionados a disponibles)
+        btnQuitar.addActionListener(e -> {
+            List<EquipoDeportivo> seleccionados = listaSeleccionados.getSelectedValuesList();
+            for (EquipoDeportivo equipo : seleccionados) {
+                modeloSeleccionados.removeElement(equipo);
+                modeloDisponibles.addElement(equipo);
+            }
+            actualizarTotalReserva(modeloSeleccionados, labelTotal);
+        });
+        
+        // Eventos para buscar equipos disponibles
+        btnBuscarEquipos.addActionListener(e -> {
+            try {
+                // Limpiar listas
+                modeloDisponibles.clear();
+                modeloSeleccionados.clear();
+                
+                // Validar entrada
+                if (cmbDestino.getSelectedItem() == null) {
+                    UIUtils.showWarningMessage(dialog, "Debe seleccionar un destino", "Advertencia");
+                    return;
+                }
+                
+                if (txtFechaInicio.getValue() == null || txtFechaFin.getValue() == null) {
+                    UIUtils.showWarningMessage(dialog, "Debe especificar las fechas de inicio y fin", "Advertencia");
+                    return;
+                }
+                
+                Date fechaInicio = (Date) txtFechaInicio.getValue();
+                Date fechaFin = (Date) txtFechaFin.getValue();
+                
+                if (fechaInicio.after(fechaFin)) {
+                    UIUtils.showWarningMessage(dialog, "La fecha de inicio no puede ser posterior a la fecha de fin", "Advertencia");
+                    return;
+                }
+                
+                if (fechaInicio.before(new Date())) {
+                    UIUtils.showWarningMessage(dialog, "La fecha de inicio no puede ser anterior a la fecha actual", "Advertencia");
+                    return;
+                }
+                
+                // Buscar equipos disponibles
+                DestinoTuristico destino = (DestinoTuristico) cmbDestino.getSelectedItem();
+                
+                java.sql.Date sqlFechaInicio = new java.sql.Date(fechaInicio.getTime());
+                java.sql.Date sqlFechaFin = new java.sql.Date(fechaFin.getTime());
+                
+                List<EquipoDeportivo> equiposDisponibles = inventarioController.buscarEquiposDisponibles(
+                    destino.getIdDestino(), sqlFechaInicio, sqlFechaFin);
+                
+                if (equiposDisponibles == null || equiposDisponibles.isEmpty()) {
+                    UIUtils.showInfoMessage(dialog, "No hay equipos disponibles en ese destino para las fechas seleccionadas", "Información");
+                    return;
+                }
+                
+                // Llenar lista de disponibles
+                for (EquipoDeportivo equipo : equiposDisponibles) {
+                    modeloDisponibles.addElement(equipo);
+                }
+                
+            } catch (Exception ex) {
+                UIUtils.showErrorMessage(dialog, "Error al buscar equipos disponibles: " + ex.getMessage(), "Error");
+            }
+        });
+        
+        // Para botón Siguiente
         btnSiguiente.addActionListener(e -> {
             try {
                 // Validar selecciones
@@ -758,7 +776,7 @@ public class PanelReservas extends JPanel {
                     return;
                 }
                 
-                if (txtFechaInicio.getDate() == null || txtFechaFin.getDate() == null) {
+                if (txtFechaInicio.getValue() == null || txtFechaFin.getValue() == null) {
                     UIUtils.showWarningMessage(dialog, "Debe especificar las fechas de inicio y fin", "Advertencia");
                     return;
                 }
@@ -778,8 +796,8 @@ public class PanelReservas extends JPanel {
                 // Actualizar datos de resumen
                 Cliente cliente = (Cliente) cmbCliente.getSelectedItem();
                 DestinoTuristico destino = (DestinoTuristico) cmbDestino.getSelectedItem();
-                Date fechaInicio = txtFechaInicio.getDate();
-                Date fechaFin = txtFechaFin.getDate();
+                Date fechaInicio = (Date) txtFechaInicio.getValue();
+                Date fechaFin = (Date) txtFechaFin.getValue();
                 
                 lblClienteValor.setText(cliente.getNombre() + " " + cliente.getApellido());
                 lblDestinoValor.setText(destino.getNombre() + " (" + destino.getUbicacion() + ")");
@@ -815,26 +833,14 @@ public class PanelReservas extends JPanel {
             }
         });
         
-        RoundedButton btnAtras = new RoundedButton("Atrás", Color.LIGHT_GRAY);
-        btnAtras.setForeground(Color.DARK_GRAY);
-        btnAtras.setVisible(false);
-        btnAtras.addActionListener(e -> {
-            tabbedPane.setSelectedIndex(0);
-            btnSiguiente.setVisible(true);
-            btnAtras.setVisible(false);
-            btnConfirmar.setVisible(false);
-        });
-        
-        RoundedButton btnConfirmar = new RoundedButton("Confirmar Reserva", UIConstants.SECONDARY_COLOR);
-        btnConfirmar.setForeground(Color.WHITE);
-        btnConfirmar.setVisible(false);
+        // Para botón confirmar reserva
         btnConfirmar.addActionListener(e -> {
             try {
                 // Crear la reserva
                 Cliente cliente = (Cliente) cmbCliente.getSelectedItem();
                 DestinoTuristico destino = (DestinoTuristico) cmbDestino.getSelectedItem();
-                Date fechaInicio = txtFechaInicio.getDate();
-                Date fechaFin = txtFechaFin.getDate();
+                Date fechaInicio = (Date) txtFechaInicio.getValue();
+                Date fechaFin = (Date) txtFechaFin.getValue();
                 
                 // Crear lista de equipos
                 List<EquipoDeportivo> equipos = new ArrayList<>();
@@ -853,10 +859,6 @@ public class PanelReservas extends JPanel {
                 UIUtils.showErrorMessage(dialog, "Error: " + ex.getMessage(), "Error");
             }
         });
-        
-        RoundedButton btnCancelar = new RoundedButton("Cancelar", Color.LIGHT_GRAY);
-        btnCancelar.setForeground(Color.DARK_GRAY);
-        btnCancelar.addActionListener(e -> dialog.dispose());
         
         buttonPanel.add(btnAtras);
         buttonPanel.add(btnCancelar);
@@ -928,7 +930,8 @@ public class PanelReservas extends JPanel {
             return;
         }
         
-        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Detalles de la Reserva", true);
+        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Detalles de la Reserva", 
+                                    Dialog.ModalityType.APPLICATION_MODAL);
         dialog.setLayout(new BorderLayout());
         dialog.setSize(800, 600);
         dialog.setLocationRelativeTo(this);
@@ -1134,7 +1137,8 @@ public class PanelReservas extends JPanel {
      * Muestra el formulario para crear un nuevo cliente
      */
     private void mostrarFormularioCliente(JComboBox<Cliente> cmbCliente) {
-        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Nuevo Cliente", true);
+        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Nuevo Cliente", 
+                                    Dialog.ModalityType.APPLICATION_MODAL);
         dialog.setLayout(new BorderLayout());
         dialog.setSize(400, 350);
         dialog.setLocationRelativeTo(this);

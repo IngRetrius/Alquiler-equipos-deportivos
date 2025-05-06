@@ -10,7 +10,7 @@ import com.deportur.vista.componentes.SearchBar;
 import com.deportur.vista.util.ImageCache;
 import com.deportur.vista.util.UIConstants;
 import com.deportur.vista.util.UIUtils;
-
+import java.awt.Dialog;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
@@ -371,7 +371,8 @@ public class PanelClientes extends JPanel implements ClienteCard.ClienteCardList
      * Muestra el formulario para agregar un nuevo cliente
      */
     public void mostrarFormularioAgregar() {
-        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Agregar Cliente", true);
+        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Agregar Cliente", 
+                                     Dialog.ModalityType.APPLICATION_MODAL);
         dialog.setLayout(new BorderLayout());
         dialog.setSize(600, 500);
         dialog.setLocationRelativeTo(this);
@@ -507,7 +508,8 @@ public class PanelClientes extends JPanel implements ClienteCard.ClienteCardList
             return;
         }
         
-        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Modificar Cliente", true);
+        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Modificar Cliente", 
+                             Dialog.ModalityType.APPLICATION_MODAL);
         dialog.setLayout(new BorderLayout());
         dialog.setSize(600, 500);
         dialog.setLocationRelativeTo(this);
@@ -672,7 +674,8 @@ public class PanelClientes extends JPanel implements ClienteCard.ClienteCardList
     private void mostrarDetallesCliente(Cliente cliente) {
         if (cliente == null) return;
         
-        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Detalles del Cliente", true);
+        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Detalles del Cliente", 
+                             Dialog.ModalityType.APPLICATION_MODAL);
         dialog.setLayout(new BorderLayout());
         dialog.setSize(600, 400);
         dialog.setLocationRelativeTo(this);
