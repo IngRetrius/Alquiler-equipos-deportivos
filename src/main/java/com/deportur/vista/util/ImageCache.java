@@ -94,11 +94,8 @@ public class ImageCache {
         
         // Si no existe la imagen, retornar la imagen por defecto
         if (!imageCache.containsKey("default_destination")) {
-            ImageIcon defaultIcon = new ImageIcon(ImageCache.class.getResource("/com/deportur/resources/images/default_destination.png"));
-            // Verificar si la imagen se cargó correctamente sin usar MediaTracker
-            if (defaultIcon.getImage() == null) {
-                defaultIcon = SVGUtil.createPlaceholderIcon("destination", 200, 150);
-            }
+            // Usar un placeholder en lugar de intentar cargar una imagen que no existe
+            ImageIcon defaultIcon = SVGUtil.createPlaceholderIcon("destination", 200, 150);
             imageCache.put("default_destination", defaultIcon);
         }
         
@@ -152,6 +149,10 @@ public class ImageCache {
      * @return ImageIcon redimensionado
      */
     public static ImageIcon resizeImage(ImageIcon originalIcon, int width, int height) {
+        if (originalIcon == null || originalIcon.getImage() == null) {
+            return SVGUtil.createPlaceholderIcon("image", width, height);
+        }
+        
         Image originalImage = originalIcon.getImage();
         
         // Calcular dimensiones manteniendo la proporción
