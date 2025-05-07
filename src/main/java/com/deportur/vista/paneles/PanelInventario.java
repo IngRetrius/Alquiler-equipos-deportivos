@@ -12,14 +12,19 @@ import com.deportur.vista.componentes.StatusIndicator;
 import com.deportur.vista.util.ImageCache;
 import com.deportur.vista.util.UIConstants;
 import com.deportur.vista.util.UIUtils;
-import java.awt.Dialog;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -462,12 +467,12 @@ public class PanelInventario extends JPanel implements EquipoCard.EquipoCardList
      */
     public void mostrarFormularioAgregar() {
         JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Agregar Equipo", 
-                                     Dialog.ModalityType.APPLICATION_MODAL);
+                                    Dialog.ModalityType.APPLICATION_MODAL);
         dialog.setLayout(new BorderLayout());
         dialog.setSize(800, 600);
         dialog.setLocationRelativeTo(this);
         
-        // Crear un panel con dos columnas
+        // Panel principal con dos columnas
         JPanel mainPanel = new JPanel(new BorderLayout(20, 0));
         mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
         mainPanel.setBackground(Color.WHITE);
@@ -478,11 +483,55 @@ public class PanelInventario extends JPanel implements EquipoCard.EquipoCardList
         imagePanel.setBorder(new LineBorder(Color.LIGHT_GRAY, 1, true));
         imagePanel.setPreferredSize(new Dimension(300, 0));
         
+        // Imagen inicial de placeholder
         JLabel imageLabel = new JLabel(UIConstants.DEFAULT_EQUIPMENT_IMAGE);
         imageLabel.setHorizontalAlignment(JLabel.CENTER);
         
-        JButton selectImageButton = new RoundedButton("Seleccionar Imagen", UIConstants.PRIMARY_COLOR);
+        // Archivo seleccionado (para mantener la referencia)
+        final File[] selectedImageFile = new File[1];
+        
+        // Botón para seleccionar imagen
+        RoundedButton selectImageButton = new RoundedButton("Seleccionar Imagen", UIConstants.PRIMARY_COLOR);
         selectImageButton.setForeground(Color.WHITE);
+        
+        // Listener para el botón de seleccionar imagen
+        selectImageButton.addActionListener(e -> {
+            // Crear el selector de archivos
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Seleccionar Imagen para Equipo");
+            
+            // Filtrar solo archivos de imagen
+            FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "Archivos de Imagen", "jpg", "jpeg", "png", "svg");
+            fileChooser.setFileFilter(filter);
+            
+            // Mostrar el diálogo
+            int result = fileChooser.showOpenDialog(dialog);
+            
+            // Procesar la selección
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                selectedImageFile[0] = selectedFile;
+                
+                // Actualizar la vista previa
+                try {
+                    ImageIcon selectedIcon;
+                    if (selectedFile.getName().toLowerCase().endsWith(".svg")) {
+                        // Para SVG usar el cargador específico
+                        selectedIcon = new ImageIcon(selectedFile.getPath());
+                    } else {
+                        // Para otros formatos usar la carga estándar
+                        selectedIcon = new ImageIcon(selectedFile.getPath());
+                    }
+                    
+                    // Redimensionar para la vista previa
+                    Image img = selectedIcon.getImage().getScaledInstance(250, 180, Image.SCALE_SMOOTH);
+                    imageLabel.setIcon(new ImageIcon(img));
+                } catch (Exception ex) {
+                    UIUtils.showErrorMessage(dialog, "Error al cargar la imagen: " + ex.getMessage(), "Error");
+                }
+            }
+        });
         
         imagePanel.add(imageLabel, BorderLayout.CENTER);
         imagePanel.add(selectImageButton, BorderLayout.SOUTH);
@@ -591,7 +640,52 @@ public class PanelInventario extends JPanel implements EquipoCard.EquipoCardList
                 DestinoTuristico destino = (DestinoTuristico) cmbDestino.getSelectedItem();
                 boolean disponible = chkDisponible.isSelected();
                 
+                if (nombre.isEmpty() || tipo == null || marca.isEmpty() || destino == null) {
+                    UIUtils.showWarningMessage(dialog, "Todos los campos son obligatorios", "Campos incompletos");
+                    return;
+                }
+                
                 if (controller.registrarEquipo(nombre, tipo, marca, estado, precio, fechaAdq, destino, disponible)) {
+                    // Buscar el equipo recién creado para obtener su ID
+                    // Obtener todos los equipos y filtrar manualmente
+                    List<EquipoDeportivo> todosEquipos = controller.listarTodosLosEquipos();
+                    EquipoDeportivo nuevoEquipo = null;
+                    
+                    for (EquipoDeportivo equipo : todosEquipos) {
+                        if (equipo.getNombre().equals(nombre) && equipo.getMarca().equals(marca)) {
+                            nuevoEquipo = equipo;
+                            break;
+                        }
+                    }
+                    
+                    // Si hay una imagen seleccionada, copiarla al directorio de recursos
+                    if (selectedImageFile[0] != null && nuevoEquipo != null) {
+                        String destFileName = nuevoEquipo.getIdEquipo() + ".jpg";
+                        
+                        // Ruta base del proyecto
+                        String projectDir = System.getProperty("user.dir");
+                        
+                        // Ruta destino dentro del proyecto
+                        String destFolderPath = projectDir + "/src/main/resources/com/deportur/resources/images/equipos/";
+                        
+                        // Crear directorio si no existe
+                        File destFolder = new File(destFolderPath);
+                        if (!destFolder.exists()) {
+                            destFolder.mkdirs();
+                        }
+                        
+                        File destFile = new File(destFolder, destFileName);
+                        
+                        try {
+                            // Copiar el archivo
+                            Files.copy(selectedImageFile[0].toPath(), destFile.toPath(), 
+                                      StandardCopyOption.REPLACE_EXISTING);
+                        } catch (IOException ex) {
+                            System.err.println("Error al copiar la imagen: " + ex.getMessage());
+                            // Continuar con el proceso a pesar del error en la imagen
+                        }
+                    }
+                    
                     UIUtils.showInfoMessage(dialog, "Equipo registrado con éxito", "Éxito");
                     dialog.dispose();
                     cargarDatos();
@@ -653,8 +747,49 @@ public class PanelInventario extends JPanel implements EquipoCard.EquipoCardList
         JLabel imageLabel = new JLabel(equipmentIcon);
         imageLabel.setHorizontalAlignment(JLabel.CENTER);
         
-        JButton selectImageButton = new RoundedButton("Cambiar Imagen", UIConstants.PRIMARY_COLOR);
+        // Archivo seleccionado (para mantener la referencia)
+        final File[] selectedImageFile = new File[1];
+        
+        // Botón para cambiar la imagen
+        RoundedButton selectImageButton = new RoundedButton("Cambiar Imagen", UIConstants.PRIMARY_COLOR);
         selectImageButton.setForeground(Color.WHITE);
+        selectImageButton.addActionListener(e -> {
+            // Crear el selector de archivos
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Seleccionar Nueva Imagen para Equipo");
+            
+            // Filtrar solo archivos de imagen
+            FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "Archivos de Imagen", "jpg", "jpeg", "png", "svg");
+            fileChooser.setFileFilter(filter);
+            
+            // Mostrar el diálogo
+            int result = fileChooser.showOpenDialog(dialog);
+            
+            // Procesar la selección
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                selectedImageFile[0] = selectedFile;
+                
+                // Actualizar la vista previa
+                try {
+                    ImageIcon selectedIcon;
+                    if (selectedFile.getName().toLowerCase().endsWith(".svg")) {
+                        // Para SVG usar el cargador específico
+                        selectedIcon = new ImageIcon(selectedFile.getPath());
+                    } else {
+                        // Para otros formatos usar la carga estándar
+                        selectedIcon = new ImageIcon(selectedFile.getPath());
+                    }
+                    
+                    // Redimensionar para la vista previa
+                    Image img = selectedIcon.getImage().getScaledInstance(250, 180, Image.SCALE_SMOOTH);
+                    imageLabel.setIcon(new ImageIcon(img));
+                } catch (Exception ex) {
+                    UIUtils.showErrorMessage(dialog, "Error al cargar la imagen: " + ex.getMessage(), "Error");
+                }
+            }
+        });
         
         imagePanel.add(imageLabel, BorderLayout.CENTER);
         imagePanel.add(selectImageButton, BorderLayout.SOUTH);
@@ -769,7 +904,43 @@ public class PanelInventario extends JPanel implements EquipoCard.EquipoCardList
                 DestinoTuristico destino = (DestinoTuristico) cmbDestino.getSelectedItem();
                 boolean disponible = chkDisponible.isSelected();
                 
+                if (nombre.isEmpty() || tipo == null || marca.isEmpty() || destino == null) {
+                    UIUtils.showWarningMessage(dialog, "Todos los campos son obligatorios", "Campos incompletos");
+                    return;
+                }
+                
                 if (controller.actualizarEquipo(equipoSeleccionado.getIdEquipo(), nombre, tipo, marca, estado, precio, fechaAdq, destino, disponible)) {
+                    // Si hay una imagen seleccionada, copiarla al directorio de recursos
+                    if (selectedImageFile[0] != null) {
+                        String destFileName = equipoSeleccionado.getIdEquipo() + ".jpg";
+                        
+                        // Ruta base del proyecto
+                        String projectDir = System.getProperty("user.dir");
+                        
+                        // Ruta destino dentro del proyecto
+                        String destFolderPath = projectDir + "/src/main/resources/com/deportur/resources/images/equipos/";
+                        
+                        // Crear directorio si no existe
+                        File destFolder = new File(destFolderPath);
+                        if (!destFolder.exists()) {
+                            destFolder.mkdirs();
+                        }
+                        
+                        File destFile = new File(destFolder, destFileName);
+                        
+                        try {
+                            // Copiar el archivo
+                            Files.copy(selectedImageFile[0].toPath(), destFile.toPath(), 
+                                      StandardCopyOption.REPLACE_EXISTING);
+                            
+                            // Limpiar la caché para que se cargue la nueva imagen
+                            ImageCache.clearCache();
+                        } catch (IOException ex) {
+                            System.err.println("Error al copiar la imagen: " + ex.getMessage());
+                            // Continuar con el proceso a pesar del error en la imagen
+                        }
+                    }
+                    
                     UIUtils.showInfoMessage(dialog, "Equipo actualizado con éxito", "Éxito");
                     dialog.dispose();
                     cargarDatos();

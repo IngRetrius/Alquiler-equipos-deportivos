@@ -13,9 +13,15 @@ import com.deportur.vista.util.UIUtils;
 import java.awt.Dialog;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -374,13 +380,72 @@ public class PanelClientes extends JPanel implements ClienteCard.ClienteCardList
         JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Agregar Cliente", 
                                      Dialog.ModalityType.APPLICATION_MODAL);
         dialog.setLayout(new BorderLayout());
-        dialog.setSize(600, 500);
+        dialog.setSize(700, 550);
         dialog.setLocationRelativeTo(this);
         
         // Panel principal
         JPanel mainPanel = new JPanel(new BorderLayout(20, 0));
         mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
         mainPanel.setBackground(Color.WHITE);
+        
+        // Panel izquierdo para la foto
+        JPanel imagePanel = new JPanel(new BorderLayout());
+        imagePanel.setBackground(Color.WHITE);
+        imagePanel.setBorder(new LineBorder(Color.LIGHT_GRAY, 1, true));
+        imagePanel.setPreferredSize(new Dimension(200, 0));
+        
+        // Foto inicial del cliente (placeholder)
+        JLabel imageLabel = new JLabel(UIConstants.DEFAULT_PROFILE_IMAGE);
+        imageLabel.setHorizontalAlignment(JLabel.CENTER);
+        
+        // Archivo seleccionado (para mantener la referencia)
+        final File[] selectedImageFile = new File[1];
+        
+        // Botón para seleccionar imagen
+        RoundedButton selectImageButton = new RoundedButton("Seleccionar Foto", UIConstants.PRIMARY_COLOR);
+        selectImageButton.setForeground(Color.WHITE);
+        
+        // Listener para el botón de seleccionar imagen
+        selectImageButton.addActionListener(e -> {
+            // Crear el selector de archivos
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Seleccionar Foto del Cliente");
+            
+            // Filtrar solo archivos de imagen
+            FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "Archivos de Imagen", "jpg", "jpeg", "png", "svg");
+            fileChooser.setFileFilter(filter);
+            
+            // Mostrar el diálogo
+            int result = fileChooser.showOpenDialog(dialog);
+            
+            // Procesar la selección
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                selectedImageFile[0] = selectedFile;
+                
+                // Actualizar la vista previa
+                try {
+                    ImageIcon selectedIcon;
+                    if (selectedFile.getName().toLowerCase().endsWith(".svg")) {
+                        // Para SVG usar el cargador específico
+                        selectedIcon = new ImageIcon(selectedFile.getPath());
+                    } else {
+                        // Para otros formatos usar la carga estándar
+                        selectedIcon = new ImageIcon(selectedFile.getPath());
+                    }
+                    
+                    // Redimensionar para la vista previa
+                    Image img = selectedIcon.getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
+                    imageLabel.setIcon(new ImageIcon(img));
+                } catch (Exception ex) {
+                    UIUtils.showErrorMessage(dialog, "Error al cargar la imagen: " + ex.getMessage(), "Error");
+                }
+            }
+        });
+        
+        imagePanel.add(imageLabel, BorderLayout.CENTER);
+        imagePanel.add(selectImageButton, BorderLayout.SOUTH);
         
         // Panel de formulario
         JPanel formPanel = new JPanel(new GridBagLayout());
@@ -472,7 +537,43 @@ public class PanelClientes extends JPanel implements ClienteCard.ClienteCardList
                 String email = txtEmail.getText().trim();
                 String direccion = txtDireccion.getText().trim();
                 
+                if (nombre.isEmpty() || apellido.isEmpty() || documento.isEmpty() || telefono.isEmpty()) {
+                    UIUtils.showWarningMessage(dialog, "Los campos con * son obligatorios", "Campos incompletos");
+                    return;
+                }
+                
                 if (controller.registrarCliente(nombre, apellido, documento, tipoDocumento, telefono, email, direccion)) {
+                    // Buscar el cliente recién creado para obtener su ID
+                    Cliente nuevoCliente = controller.buscarClientePorDocumento(documento);
+                    
+                    // Si hay una imagen seleccionada, copiarla al directorio de recursos
+                    if (selectedImageFile[0] != null && nuevoCliente != null) {
+                        String destFileName = nuevoCliente.getIdCliente() + ".jpg";
+                        
+                        // Ruta base del proyecto
+                        String projectDir = System.getProperty("user.dir");
+                        
+                        // Ruta destino dentro del proyecto
+                        String destFolderPath = projectDir + "/src/main/resources/com/deportur/resources/images/clientes/";
+                        
+                        // Crear directorio si no existe
+                        File destFolder = new File(destFolderPath);
+                        if (!destFolder.exists()) {
+                            destFolder.mkdirs();
+                        }
+                        
+                        File destFile = new File(destFolder, destFileName);
+                        
+                        try {
+                            // Copiar el archivo
+                            Files.copy(selectedImageFile[0].toPath(), destFile.toPath(), 
+                                      StandardCopyOption.REPLACE_EXISTING);
+                        } catch (IOException ex) {
+                            System.err.println("Error al copiar la imagen: " + ex.getMessage());
+                            // Continuar con el proceso a pesar del error en la imagen
+                        }
+                    }
+                    
                     UIUtils.showInfoMessage(dialog, "Cliente registrado con éxito", "Éxito");
                     dialog.dispose();
                     cargarDatos();
@@ -492,6 +593,7 @@ public class PanelClientes extends JPanel implements ClienteCard.ClienteCardList
         buttonPanel.add(btnGuardar);
         
         // Agregar paneles al diálogo
+        mainPanel.add(imagePanel, BorderLayout.WEST);
         mainPanel.add(formPanel, BorderLayout.CENTER);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
         
@@ -511,13 +613,71 @@ public class PanelClientes extends JPanel implements ClienteCard.ClienteCardList
         JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Modificar Cliente", 
                              Dialog.ModalityType.APPLICATION_MODAL);
         dialog.setLayout(new BorderLayout());
-        dialog.setSize(600, 500);
+        dialog.setSize(700, 550);
         dialog.setLocationRelativeTo(this);
         
         // Panel principal
         JPanel mainPanel = new JPanel(new BorderLayout(20, 0));
         mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
         mainPanel.setBackground(Color.WHITE);
+        
+        // Panel izquierdo para la foto
+        JPanel imagePanel = new JPanel(new BorderLayout());
+        imagePanel.setBackground(Color.WHITE);
+        imagePanel.setBorder(new LineBorder(Color.LIGHT_GRAY, 1, true));
+        imagePanel.setPreferredSize(new Dimension(200, 0));
+        
+        // Cargar imagen del cliente
+        ImageIcon clienteIcon = ImageCache.getClientImage(clienteSeleccionado.getIdCliente());
+        JLabel imageLabel = new JLabel(clienteIcon);
+        imageLabel.setHorizontalAlignment(JLabel.CENTER);
+        
+        // Archivo seleccionado (para mantener la referencia)
+        final File[] selectedImageFile = new File[1];
+        
+        // Botón para cambiar la imagen
+        RoundedButton selectImageButton = new RoundedButton("Cambiar Foto", UIConstants.PRIMARY_COLOR);
+        selectImageButton.setForeground(Color.WHITE);
+        selectImageButton.addActionListener(e -> {
+            // Crear el selector de archivos
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Seleccionar Nueva Foto del Cliente");
+            
+            // Filtrar solo archivos de imagen
+            FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "Archivos de Imagen", "jpg", "jpeg", "png", "svg");
+            fileChooser.setFileFilter(filter);
+            
+            // Mostrar el diálogo
+            int result = fileChooser.showOpenDialog(dialog);
+            
+            // Procesar la selección
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                selectedImageFile[0] = selectedFile;
+                
+                // Actualizar la vista previa
+                try {
+                    ImageIcon selectedIcon;
+                    if (selectedFile.getName().toLowerCase().endsWith(".svg")) {
+                        // Para SVG usar el cargador específico
+                        selectedIcon = new ImageIcon(selectedFile.getPath());
+                    } else {
+                        // Para otros formatos usar la carga estándar
+                        selectedIcon = new ImageIcon(selectedFile.getPath());
+                    }
+                    
+                    // Redimensionar para la vista previa
+                    Image img = selectedIcon.getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
+                    imageLabel.setIcon(new ImageIcon(img));
+                } catch (Exception ex) {
+                    UIUtils.showErrorMessage(dialog, "Error al cargar la imagen: " + ex.getMessage(), "Error");
+                }
+            }
+        });
+        
+        imagePanel.add(imageLabel, BorderLayout.CENTER);
+        imagePanel.add(selectImageButton, BorderLayout.SOUTH);
         
         // Panel de formulario
         JPanel formPanel = new JPanel(new GridBagLayout());
@@ -616,7 +776,43 @@ public class PanelClientes extends JPanel implements ClienteCard.ClienteCardList
                 String email = txtEmail.getText().trim();
                 String direccion = txtDireccion.getText().trim();
                 
+                if (nombre.isEmpty() || apellido.isEmpty() || documento.isEmpty() || telefono.isEmpty()) {
+                    UIUtils.showWarningMessage(dialog, "Los campos con * son obligatorios", "Campos incompletos");
+                    return;
+                }
+                
                 if (controller.actualizarCliente(clienteSeleccionado.getIdCliente(), nombre, apellido, documento, tipoDocumento, telefono, email, direccion)) {
+                    // Si hay una imagen seleccionada, copiarla al directorio de recursos
+                    if (selectedImageFile[0] != null) {
+                        String destFileName = clienteSeleccionado.getIdCliente() + ".jpg";
+                        
+                        // Ruta base del proyecto
+                        String projectDir = System.getProperty("user.dir");
+                        
+                        // Ruta destino dentro del proyecto
+                        String destFolderPath = projectDir + "/src/main/resources/com/deportur/resources/images/clientes/";
+                        
+                        // Crear directorio si no existe
+                        File destFolder = new File(destFolderPath);
+                        if (!destFolder.exists()) {
+                            destFolder.mkdirs();
+                        }
+                        
+                        File destFile = new File(destFolder, destFileName);
+                        
+                        try {
+                            // Copiar el archivo
+                            Files.copy(selectedImageFile[0].toPath(), destFile.toPath(), 
+                                      StandardCopyOption.REPLACE_EXISTING);
+                            
+                            // Limpiar la caché para que se cargue la nueva imagen
+                            ImageCache.clearCache();
+                        } catch (IOException ex) {
+                            System.err.println("Error al copiar la imagen: " + ex.getMessage());
+                            // Continuar con el proceso a pesar del error en la imagen
+                        }
+                    }
+                    
                     UIUtils.showInfoMessage(dialog, "Cliente actualizado con éxito", "Éxito");
                     dialog.dispose();
                     cargarDatos();
@@ -636,6 +832,7 @@ public class PanelClientes extends JPanel implements ClienteCard.ClienteCardList
         buttonPanel.add(btnGuardar);
         
         // Agregar paneles al diálogo
+        mainPanel.add(imagePanel, BorderLayout.WEST);
         mainPanel.add(formPanel, BorderLayout.CENTER);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
         
