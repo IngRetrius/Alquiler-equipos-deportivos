@@ -2,7 +2,7 @@ package com.deportur.vista.util;
 
 import javax.swing.ImageIcon;
 import java.awt.Image;
-import java.io.File;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,10 +12,9 @@ import java.util.Map;
 public class ImageCache {
     
     private static final Map<String, ImageIcon> imageCache = new HashMap<>();
-    private static final String DEFAULT_IMAGES_PATH = "resources/images/";
-    private static final String EQUIPMENT_IMAGES_PATH = DEFAULT_IMAGES_PATH + "equipos/";
-    private static final String DESTINATION_IMAGES_PATH = DEFAULT_IMAGES_PATH + "destinos/";
-    private static final String CLIENT_IMAGES_PATH = DEFAULT_IMAGES_PATH + "clientes/";
+    private static final String EQUIPMENT_IMAGES_PATH = "/com/deportur/resources/images/equipos/";
+    private static final String DESTINATION_IMAGES_PATH = "/com/deportur/resources/images/destinos/";
+    private static final String CLIENT_IMAGES_PATH = "/com/deportur/resources/images/clientes/";
     
     /**
      * Obtiene una imagen de equipo, primero buscando en la cache
@@ -29,10 +28,24 @@ public class ImageCache {
             return imageCache.get(key);
         }
         
-        // Intentar cargar la imagen desde el sistema de archivos
-        File imageFile = new File(EQUIPMENT_IMAGES_PATH + equipmentId + ".jpg");
-        if (imageFile.exists()) {
-            ImageIcon icon = new ImageIcon(imageFile.getAbsolutePath());
+        // Primero intentar SVG
+        String svgPath = EQUIPMENT_IMAGES_PATH + equipmentId + ".svg";
+        URL svgUrl = ImageCache.class.getResource(svgPath);
+        if (svgUrl != null) {
+            try {
+                ImageIcon icon = SVGLoader.loadSVG(svgPath, 200, 150);
+                imageCache.put(key, icon);
+                return icon;
+            } catch (Exception e) {
+                System.err.println("Error cargando SVG: " + e.getMessage());
+            }
+        }
+        
+        // Si no hay SVG, intentar con JPG
+        String jpgPath = EQUIPMENT_IMAGES_PATH + equipmentId + ".jpg";
+        URL jpgUrl = ImageCache.class.getResource(jpgPath);
+        if (jpgUrl != null) {
+            ImageIcon icon = new ImageIcon(jpgUrl);
             imageCache.put(key, icon);
             return icon;
         }
@@ -57,17 +70,35 @@ public class ImageCache {
             return imageCache.get(key);
         }
         
-        // Intentar cargar la imagen desde el sistema de archivos
-        File imageFile = new File(DESTINATION_IMAGES_PATH + destinationId + ".jpg");
-        if (imageFile.exists()) {
-            ImageIcon icon = new ImageIcon(imageFile.getAbsolutePath());
+        // Primero intentar SVG
+        String svgPath = DESTINATION_IMAGES_PATH + destinationId + ".svg";
+        URL svgUrl = ImageCache.class.getResource(svgPath);
+        if (svgUrl != null) {
+            try {
+                ImageIcon icon = SVGLoader.loadSVG(svgPath, 300, 200);
+                imageCache.put(key, icon);
+                return icon;
+            } catch (Exception e) {
+                System.err.println("Error cargando SVG: " + e.getMessage());
+            }
+        }
+        
+        // Si no hay SVG, intentar con JPG
+        String jpgPath = DESTINATION_IMAGES_PATH + destinationId + ".jpg";
+        URL jpgUrl = ImageCache.class.getResource(jpgPath);
+        if (jpgUrl != null) {
+            ImageIcon icon = new ImageIcon(jpgUrl);
             imageCache.put(key, icon);
             return icon;
         }
         
-        // Si no existe la imagen, retornar una imagen por defecto para destinos
+        // Si no existe la imagen, retornar la imagen por defecto
         if (!imageCache.containsKey("default_destination")) {
-            ImageIcon defaultIcon = new ImageIcon(DEFAULT_IMAGES_PATH + "default_destination.png");
+            ImageIcon defaultIcon = new ImageIcon(ImageCache.class.getResource("/com/deportur/resources/images/default_destination.png"));
+            // Verificar si la imagen se cargó correctamente sin usar MediaTracker
+            if (defaultIcon.getImage() == null) {
+                defaultIcon = SVGUtil.createPlaceholderIcon("destination", 200, 150);
+            }
             imageCache.put("default_destination", defaultIcon);
         }
         
@@ -86,10 +117,24 @@ public class ImageCache {
             return imageCache.get(key);
         }
         
-        // Intentar cargar la imagen desde el sistema de archivos
-        File imageFile = new File(CLIENT_IMAGES_PATH + clientId + ".jpg");
-        if (imageFile.exists()) {
-            ImageIcon icon = new ImageIcon(imageFile.getAbsolutePath());
+        // Primero intentar SVG
+        String svgPath = CLIENT_IMAGES_PATH + clientId + ".svg";
+        URL svgUrl = ImageCache.class.getResource(svgPath);
+        if (svgUrl != null) {
+            try {
+                ImageIcon icon = SVGLoader.loadSVG(svgPath, 64, 64);
+                imageCache.put(key, icon);
+                return icon;
+            } catch (Exception e) {
+                System.err.println("Error cargando SVG: " + e.getMessage());
+            }
+        }
+        
+        // Si no hay SVG, intentar con JPG
+        String jpgPath = CLIENT_IMAGES_PATH + clientId + ".jpg";
+        URL jpgUrl = ImageCache.class.getResource(jpgPath);
+        if (jpgUrl != null) {
+            ImageIcon icon = new ImageIcon(jpgUrl);
             imageCache.put(key, icon);
             return icon;
         }

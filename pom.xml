@@ -33,6 +33,27 @@
             <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
+        <!-- Batik SVG Core -->
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-svggen</artifactId>
+            <version>1.14</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-swing</artifactId>
+            <version>1.14</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-transcoder</artifactId>
+            <version>1.14</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-anim</artifactId>
+            <version>1.14</version>
+        </dependency>
     </dependencies>
 
     <build>

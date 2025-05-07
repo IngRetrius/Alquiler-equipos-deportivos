@@ -19,6 +19,7 @@ public class RoundedButton extends JButton {
     private Color hoverColor;
     private boolean isHover = false;
     private boolean isPressed = false;
+    private Color originalForeground = Color.WHITE;
     
     /**
      * Constructor para botón con texto
@@ -64,24 +65,33 @@ public class RoundedButton extends JButton {
         setBorderPainted(false);
         setOpaque(false);
         setForeground(Color.WHITE);
-        setFont(UIConstants.NORMAL_FONT);
+        originalForeground = Color.WHITE;
+        
+        // Usar una fuente un poco más grande
+        setFont(new Font(UIConstants.NORMAL_FONT.getName(), Font.BOLD, 12));
         setCursor(new Cursor(Cursor.HAND_CURSOR));
         
-        // Añadir padding
+        // Añadir padding más grande para botones más amplios
         if (icon != null && getText() != null && !getText().isEmpty()) {
-            setBorder(new EmptyBorder(8, 15, 8, 15));
+            setBorder(new EmptyBorder(10, 20, 10, 20));
         } else if (icon != null) {
-            setBorder(new EmptyBorder(8, 8, 8, 8));
+            setBorder(new EmptyBorder(10, 10, 10, 10));
         } else {
-            setBorder(new EmptyBorder(8, 20, 8, 20));
+            setBorder(new EmptyBorder(10, 25, 10, 25));
         }
+        
+        // Establecer tamaño mínimo para asegurar visibilidad
+        setMinimumSize(new Dimension(100, 40));
+        setPreferredSize(new Dimension(120, 40));
         
         // Agregar listeners para efectos visuales
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                isHover = true;
-                repaint();
+                if (isEnabled()) {
+                    isHover = true;
+                    repaint();
+                }
             }
             
             @Override
@@ -92,8 +102,10 @@ public class RoundedButton extends JButton {
             
             @Override
             public void mousePressed(MouseEvent e) {
-                isPressed = true;
-                repaint();
+                if (isEnabled()) {
+                    isPressed = true;
+                    repaint();
+                }
             }
             
             @Override
@@ -105,12 +117,40 @@ public class RoundedButton extends JButton {
     }
     
     @Override
+    public void setForeground(Color fg) {
+        super.setForeground(fg);
+        if (fg != null) {
+            originalForeground = fg;
+        }
+    }
+    
+    @Override
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        
+        if (!enabled) {
+            // Mantener el mismo color de texto, solo cambiar la apariencia del botón
+            super.setForeground(originalForeground);
+        }
+        repaint();
+    }
+    
+    @Override
     protected void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         
         // Determinar el color basado en el estado del botón
-        if (isPressed) {
+        if (!isEnabled()) {
+            // Si está deshabilitado, usar un color con opacidad
+            Color disabledColor = new Color(
+                backgroundColor.getRed(),
+                backgroundColor.getGreen(),
+                backgroundColor.getBlue(),
+                150  // Opacidad reducida
+            );
+            g2.setColor(disabledColor);
+        } else if (isPressed) {
             g2.setColor(pressedColor);
         } else if (isHover) {
             g2.setColor(hoverColor);
@@ -121,14 +161,19 @@ public class RoundedButton extends JButton {
         // Dibujar el fondo redondeado
         g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), UIConstants.BORDER_RADIUS, UIConstants.BORDER_RADIUS));
         
-        // Dibujar efecto de sombra sutil cuando está hover
-        if (isHover && !isPressed) {
+        // Dibujar efecto de sombra sutil cuando está hover y habilitado
+        if (isHover && !isPressed && isEnabled()) {
             g2.setColor(new Color(0, 0, 0, 40));
             g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, UIConstants.BORDER_RADIUS, UIConstants.BORDER_RADIUS));
         }
         
-        g2.dispose();
+        // Si está deshabilitado, asegurar que el texto permanezca visible
+        if (!isEnabled()) {
+            // Usar AlphaComposite directamente sin guardar el original
+            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+        }
         
+        g2.dispose();
         super.paintComponent(g);
     }
     

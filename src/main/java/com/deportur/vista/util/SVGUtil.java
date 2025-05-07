@@ -4,41 +4,56 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import javax.swing.ImageIcon;
+import java.io.InputStream;
+import org.apache.batik.transcoder.TranscoderException;
+import org.apache.batik.transcoder.TranscoderInput;
+import org.apache.batik.transcoder.TranscoderOutput;
+import org.apache.batik.transcoder.image.PNGTranscoder;
 
 /**
  * Utilidad para trabajar con archivos SVG
  */
 public class SVGUtil {
     
-    private static final String BASE_PATH = "src/main/resources";
+    /**
+     * Convierte SVG a PNG
+     * 
+     * @param svgContent Contenido SVG como String
+     * @param outputStream Stream donde guardar el PNG
+     * @param width Ancho deseado
+     * @param height Alto deseado
+     */
+    public static void svgToPng(String svgContent, OutputStream outputStream, float width, float height) 
+            throws TranscoderException, IOException {
+        try (InputStream is = new java.io.ByteArrayInputStream(svgContent.getBytes(StandardCharsets.UTF_8))) {
+            TranscoderInput input = new TranscoderInput(is);
+            TranscoderOutput output = new TranscoderOutput(outputStream);
+            
+            PNGTranscoder transcoder = new PNGTranscoder();
+            transcoder.addTranscodingHint(PNGTranscoder.KEY_WIDTH, width);
+            transcoder.addTranscodingHint(PNGTranscoder.KEY_HEIGHT, height);
+            
+            transcoder.transcode(input, output);
+        }
+    }
     
     /**
-     * Crea o reemplaza un archivo SVG en la ubicación especificada
+     * Guarda contenido SVG en un archivo
      * 
-     * @param relativePath Ruta relativa donde se guardará el archivo
-     * @param svgContent Contenido SVG a guardar
-     * @return true si la operación fue exitosa
+     * @param path Ruta del archivo
+     * @param svgContent Contenido SVG
      */
-    public static boolean saveSVG(String relativePath, String svgContent) {
-        // Asegurar que el directorio exista
-        File file = new File(BASE_PATH + relativePath);
-        File parent = file.getParentFile();
-        
-        if (!parent.exists()) {
-            parent.mkdirs();
-        }
-        
-        try (OutputStream out = new FileOutputStream(file)) {
+    public static boolean saveSVGToFile(String path, String svgContent) {
+        try (OutputStream out = new FileOutputStream(path)) {
             out.write(svgContent.getBytes(StandardCharsets.UTF_8));
             return true;
         } catch (IOException e) {
-            System.err.println("Error al guardar SVG en " + relativePath + ": " + e.getMessage());
+            System.err.println("Error al guardar SVG en " + path + ": " + e.getMessage());
             return false;
         }
     }

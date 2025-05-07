@@ -7,6 +7,7 @@ import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import java.awt.Image;
 import java.net.URL;
 
 /**
@@ -58,13 +59,31 @@ public class UIConstants {
     
     // Método mejorado para cargar iconos con fallback visual y tamaño personalizado
     private static ImageIcon safeLoadIcon(String path, int width, int height) {
-        URL resourceUrl = UIConstants.class.getResource(path);
-        if (resourceUrl != null) {
-            return new ImageIcon(resourceUrl);
-        } else {
-            System.out.println("Advertencia: No se pudo cargar el recurso: " + path);
-            return SVGUtil.createPlaceholderIcon(path, width, height);
+        try {
+            // Verificar si es un SVG
+            if (path.toLowerCase().endsWith(".svg")) {
+                return SVGLoader.loadSVG(path, width, height);
+            } else {
+                // Para otros formatos de imagen (PNG, JPG)
+                URL resourceUrl = UIConstants.class.getResource(path);
+                if (resourceUrl != null) {
+                    ImageIcon icon = new ImageIcon(resourceUrl);
+                    
+                    // Redimensionar si es necesario
+                    if (icon.getIconWidth() != width || icon.getIconHeight() != height) {
+                        Image scaledImage = icon.getImage().getScaledInstance(
+                            width, height, Image.SCALE_SMOOTH);
+                        return new ImageIcon(scaledImage);
+                    }
+                    return icon;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error cargando icono " + path + ": " + e.getMessage());
         }
+        
+        // Fallback a icono placeholder
+        return SVGUtil.createPlaceholderIcon(path, width, height);
     }
     
     // Iconos de la aplicación
@@ -90,7 +109,7 @@ public class UIConstants {
     // Imágenes
     public static final ImageIcon DEFAULT_EQUIPMENT_IMAGE = safeLoadIcon(IMAGE_PATH + "default_equipment.svg", 64, 64);
     public static final ImageIcon DEFAULT_PROFILE_IMAGE = safeLoadIcon(IMAGE_PATH + "default_profile.svg", 64, 64);
-    public static final ImageIcon LOGIN_BACKGROUND = safeLoadIcon(IMAGE_PATH + "login_background.svg", 450, 600);
+    public static final ImageIcon LOGIN_BACKGROUND = safeLoadIcon(IMAGE_PATH + "login_background.png", 450, 600);
     
     // Texto para tooltips
     public static final String ADD_TOOLTIP = "Agregar nuevo registro";
